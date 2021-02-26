@@ -1,9 +1,0 @@
-type: AZURE
-config:
-  storage_account: "azaks2021devtf01"
-  #Replace your storage account
-  storage_account_key: '' #script gets the KEY and replaces via helm.
-  container: "thanos"
-  endpoint: "blob.core.windows.net"
-  max_retries: 0
-  #replace with actuals for key
