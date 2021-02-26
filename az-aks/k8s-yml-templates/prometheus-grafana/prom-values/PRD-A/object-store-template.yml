@@ -1,0 +1,9 @@
+type: AZURE
+config:
+  storage_account: "azaks2021prdatf01"
+  #replace with your accountname
+  storage_account_key: '' #FROM GIT.
+  container: "thanos"
+  endpoint: "blob.core.windows.net"
+  max_retries: 0
+  #replace with actuals for key

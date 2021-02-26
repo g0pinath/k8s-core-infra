@@ -1,0 +1,18 @@
+
+allowVolumeExpansion: true
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  labels:
+    addonmanager.kubernetes.io/mode: EnsureExists
+    kubernetes.io/cluster-service: "true"
+  managedFields:
+  - apiVersion: storage.k8s.io/v1beta1
+    manager: kubectl
+  name: azurefile-retain
+  selfLink: /apis/storage.k8s.io/v1/storageclasses/azurefile
+parameters:
+  skuName: Standard_LRS
+provisioner: kubernetes.io/azure-file
+reclaimPolicy: Retain
+volumeBindingMode: Immediate

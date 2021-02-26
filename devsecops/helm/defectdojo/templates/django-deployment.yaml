@@ -1,0 +1,161 @@
+{{- $fullName := include "defectdojo.fullname" . -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $fullName }}-django
+  labels:
+    defectdojo.org/component: django
+    app.kubernetes.io/name: {{ include "defectdojo.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    helm.sh/chart: {{ include "defectdojo.chart" . }}
+spec:
+  replicas: {{ .Values.django.replicas }}
+  selector:
+    matchLabels:
+      defectdojo.org/component: django
+      app.kubernetes.io/name: {{ include "defectdojo.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        defectdojo.org/component: django
+        app.kubernetes.io/name: {{ include "defectdojo.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+      annotations:
+      {{- with .Values.django.annotations }}
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    spec:
+      serviceAccountName: {{ $fullName }}
+      {{- if .Values.imagePullSecrets }}
+      imagePullSecrets:
+      - name: {{ .Values.imagePullSecrets }}
+      {{- end }}
+      volumes:
+      - name: run
+        emptyDir: {}
+      containers:
+      {{- if .Values.cloudsql.enabled  }}
+      - name: cloudsql-proxy
+        image: {{ .Values.cloudsql.image.repository }}:{{ .Values.cloudsql.image.tag }}
+        imagePullPolicy: {{ .Values.cloudsql.image.pullPolicy }}
+        securityContext:
+          runAsNonRoot: true
+        command: ["/cloud_sql_proxy"]
+        args:
+        {{- if eq .Values.database "postgresql" }}
+        - "-instances={{ .Values.cloudsql.instance }}=tcp:{{ .Values.postgresql.service.port }}"
+        {{- else if eq .Values.database "mysql" }}
+        - "-instances={{ .Values.cloudsql.instance }}=tcp:{{ .Values.mysql.service.port }}"
+        {{- end }}
+      {{- end }}
+      - name: uwsgi
+        image: '{{ template "django.uwsgi.repository" . }}:{{ .Values.tag }}'
+        imagePullPolicy: {{ .Values.imagePullPolicy }}
+        volumeMounts:
+        - name: run
+          mountPath: /run/defectdojo
+        envFrom:
+        - configMapRef:
+            name: {{ $fullName }}
+        - secretRef:
+            name: {{ $fullName }}-extrasecrets
+            optional: true
+        env:
+        - name: ALLOWED_HOSTS
+          value: {{ .Values.host }}
+        - name: DD_CELERY_BROKER_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: defectdojo-{{ .Values.celery.broker }}-specific
+              key: {{ .Values.celery.broker }}-password
+        - name: DD_DATABASE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              {{- if eq .Values.database "postgresql" }}
+              name: {{ .Values.postgresql.existingSecret }}
+              key: {{ .Values.postgresql.secretKey }}
+              {{- else if eq .Values.database "mysql" }}
+              name: {{ .Values.mysql.existingSecret }}
+              key: {{ .Values.mysql.secretKey }}
+              {{- end }}
+        - name: DD_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: {{ $fullName }}
+              key: DD_SECRET_KEY
+        - name: DD_CREDENTIAL_AES_256_KEY
+          valueFrom:
+            secretKeyRef:
+              name: {{ $fullName }}
+              key: DD_CREDENTIAL_AES_256_KEY
+        - name: DD_SESSION_COOKIE_SECURE
+          value: {{- if or .Values.django.ingress.activateTLS .Values.django.nginx.tls.enabled }} "True" {{- else }} "False" {{- end }}
+        - name: DD_CSRF_COOKIE_SECURE
+          value: {{- if or .Values.django.ingress.activateTLS .Values.django.nginx.tls.enabled }} "True" {{- else }} "False" {{- end }}
+        resources:
+          {{- toYaml .Values.django.uwsgi.resources | nindent 10 }}
+      - name: nginx
+        image: '{{ template "django.nginx.repository" . }}:{{ .Values.tag }}'
+        imagePullPolicy: {{ .Values.imagePullPolicy }}
+        volumeMounts:
+        - name: run
+          mountPath: /run/defectdojo
+        ports:
+        - name: http
+          protocol: TCP
+          containerPort: {{- if .Values.django.nginx.tls.enabled }} 8443 {{- else }} 8080 {{- end }}
+        envFrom:
+        - configMapRef:
+            name: {{ $fullName }}
+        env:
+        - name: METRICS_HTTP_AUTH_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ $fullName }}
+              key: METRICS_HTTP_AUTH_PASSWORD
+        - name: USE_TLS
+          value: '{{ .Values.django.nginx.tls.enabled }}'
+        - name: GENERATE_TLS_CERTIFICATE
+          value: '{{ .Values.django.nginx.tls.generateCertificate }}'
+        livenessProbe:
+          httpGet:
+            path: /
+            port: http
+            {{- if .Values.django.nginx.tls.enabled }}
+            scheme: HTTPS
+            {{- end }}
+            httpHeaders:
+            - name: Host
+              value: {{ .Values.host }}
+          initialDelaySeconds: 120
+          periodSeconds: 10
+          failureThreshold: 6
+        readinessProbe:
+          httpGet:
+            path: /
+            port: http
+            {{- if .Values.django.nginx.tls.enabled }}
+            scheme: HTTPS
+            {{- end }}
+            httpHeaders:
+            - name: Host
+              value: {{ .Values.host }}
+          initialDelaySeconds: 120
+          periodSeconds: 10
+          failureThreshold: 12
+        resources:
+          {{- toYaml .Values.django.nginx.resources | nindent 10 }}
+      {{- with .Values.django.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    {{- with .Values.django.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.django.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}

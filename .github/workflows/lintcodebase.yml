@@ -1,0 +1,51 @@
+name: LintCodeBase
+# GitHub Documentation:
+# https://help.github.com/en/articles/workflow-syntax-for-github-actions
+# https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions
+
+on:
+  workflow_dispatch:
+  #push:
+  #  branches: [ develop, main ]
+  #pull_request:
+    #branches-ignore:
+      #- "master"
+      #- '**'          # Disable for all branches!
+
+env:
+  LOG_FILE: super-linter.log
+
+jobs:
+  build:
+    name: Lint Code Base
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out Code
+        uses: actions/checkout@v2
+
+      - name: Lint Code Base
+        uses: docker://github/super-linter:latest
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          FILTER_REGEX_EXCLUDE: .*SDK/.*|.*Silverlight.js
+          OUTPUT_DETAILS: detailed
+          OUTPUT_FORMAT: tap
+          VALIDATE_ALL_CODEBASE: true #github.event.inputs.scope
+          # Repository languages.
+          #VALIDATE_CSS: true
+          #VALIDATE_HTML: true
+          VALIDATE_JAVASCRIPT_STANDARD: true
+          VALIDATE_JSON: true
+          #VALIDATE_POWERSHELL: true
+          #VALIDATE_XML: true
+          VALIDATE_YAML: true
+
+      - name: Upload Super-Linter Reports
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v2.1.4
+        with:
+          name: Super-Linter Reports
+          path: |
+            ${{ github.workspace }}/${{ env.LOG_FILE }}
+          if-no-files-found: warn

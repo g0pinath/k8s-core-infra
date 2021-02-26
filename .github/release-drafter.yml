@@ -1,0 +1,53 @@
+name-template: 'K8S-Core-Infra v$RESOLVED_VERSION'
+tag-template: 'v$RESOLVED_VERSION'
+sort-by: merged_at                  # title
+sort-direction: descending          # ascending 
+categories:
+  - title: '🆕 Enhancements'
+    labels:
+      - 'feature'
+      - 'enhancement'
+  - title: '✔ Bug Fixes'
+    labels:
+      - 'fix'
+      - 'bugfix'
+      - 'bug'
+      - 'hotfix'
+      - 'patch'
+  - title: 'ℹ Other Changes'
+    labels:
+      - 'documentation'
+      - 'devops'
+      - 'maintenance'
+
+change-template: |
+  - #$NUMBER: $TITLE (@$AUTHOR)
+
+version-template: $MAJOR.$MINOR.$PATCH # $MAJOR.$MINOR.$PATCH [DEFAULT]
+version-resolver:
+  major:
+    labels:
+      - 'upgrade'
+      - 'major'
+      - 'new'
+  minor:
+    labels:
+      - 'sprint'
+      - 'minor'
+      - 'enhancement'
+      - 'feature'
+  patch:
+    labels:
+      - 'fix'
+      - 'hotfix'
+      - 'bug'
+      - 'patch'
+      - 'documentation'
+
+
+  default: patch
+
+template: |
+  # What's new
+
+  $CHANGES

@@ -1,0 +1,11 @@
+apiVersion: constraints.gatekeeper.sh/v1beta1
+kind: K8sAzureBlockAutomountToken
+metadata:
+  name: azure-block-automount
+spec:
+  enforcementAction: deny
+  match:
+    excludedNamespaces: ["kube-system", "gatekeeper-system", "monitoring", "linkerd", "ingress", "devops-addons"]
+    kinds:
+      - apiGroups: [""]
+        kinds: ["Pod"]

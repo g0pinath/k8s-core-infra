@@ -1,0 +1,28 @@
+
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: aks-qa-admins
+  namespace: qa
+rules:
+- apiGroups: ["*"]
+  resources: ["*"]
+  verbs: ["*"]
+---
+
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: qa-contributor-role-binding
+  namespace: qa
+subjects:
+- kind: Group
+  name: d400ac15-4d25-438b-85ba-aac2abe46891 #SID of the Azure AD Group aks-qa-admins
+  namespace: dev
+roleRef:
+  kind: Role
+  name: aks-qa-admins
+  apiGroup: rbac.authorization.k8s.io
+---
+
+

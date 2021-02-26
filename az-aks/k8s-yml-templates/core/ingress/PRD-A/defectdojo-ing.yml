@@ -1,0 +1,30 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: defectdojo
+  namespace: devops-addons
+  annotations:
+    kubernetes.io/ingress.class: nginx   
+    nginx.ingress.kubernetes.io/proxy-body-size: "600m"
+    nginx.org/client-max-body-size: "600m"
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+spec:
+    tls:
+      - hosts:
+        #- defectdojo-dev.cloudkube.xyz
+        - az-defectdojo-prd-a.cloudkube.xyz
+        secretName: ingress-secret-tls 
+    rules:
+    #- host: defectdojo-dev.cloudkube.xyz
+    #  http:
+    #    paths:
+    #    - backend:
+    #        serviceName: defectdojo-django
+    #        servicePort: 80
+    - host: az-defectdojo-prd-a.cloudkube.xyz
+      http:
+        paths:
+        - backend:
+            serviceName: defectdojo-django
+            servicePort: 80
+---

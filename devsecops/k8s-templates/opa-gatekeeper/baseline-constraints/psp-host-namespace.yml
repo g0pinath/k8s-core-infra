@@ -1,0 +1,11 @@
+apiVersion: constraints.gatekeeper.sh/v1beta1
+kind: K8sAzureBlockHostNamespace
+metadata:
+  name: psp-host-namespace
+spec:
+  enforcementAction: deny
+  match:
+    excludedNamespaces: ["kube-system", "gatekeeper-system", "monitoring", "linkerd"]
+    kinds:
+      - apiGroups: [""]
+        kinds: ["Pod"]

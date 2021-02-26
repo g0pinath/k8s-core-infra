@@ -1,0 +1,79 @@
+name: AzDev-Core-Infra-Deployment
+
+# Trigger on commit to master and appropriate folder paths for dev 
+on:
+  workflow_dispatch:  
+  #push:
+  #  branches: [ develop ]
+
+env:
+  
+  ARM_TENANT_ID:  ${{ secrets.ARM_TENANT_ID }}
+  #DEV_ARM_CLIENT_ID:  ${{ secrets.DEV_ARM_CLIENT_ID }}
+  #DEV_ARM_CLIENT_SECRET:  ${{ secrets.DEV_ARM_CLIENT_SECRET }}  
+  DEV_ARM_SUBSCRIPTION_ID: ${{ secrets.DEV_ARM_SUBSCRIPTION_ID }} 
+  DEV_K8S_RG_NAME:  "RG-DEV-K8S-CLUSTER" 
+  DEV_K8S_KV_NAME: ${{ secrets.DEV_K8S_KV_NAME }} 
+  DEV_K8S_NAME: ${{ secrets.DEV_K8S_NAME }} 
+  DEV_LA_NAME: ${{ secrets.DEV_LA_NAME }} 
+  DEV_DD_ADMIN_PWD: ${{ secrets.DEV_DD_ADMIN_PWD }} 
+  DEV_TF_STORAGE_NAME: ${{ secrets.DEV_TF_STORAGE_NAME }} 
+  DEV_TLS_PRIVATE_KEY: ${{ secrets.DEV_TLS_PRIVATE_KEY }}  
+  DEPLOY_TOKEN_GITHUB: ${{ secrets.DEPLOY_TOKEN_GITHUB }} 
+  SENDGRIDKEY: ${{ secrets.SENDGRIDKEY }}
+  #ARM_CLIENT_ID: ${{ secrets.DEV_ARM_CLIENT_ID }}
+  #ARM_CLIENT_SECRET: ${{secrets.DEV_ARM_CLIENT_SECRET}}
+  ARM_SUBSCRIPTION_ID: ${{secrets.DEV_ARM_SUBSCRIPTION_ID}}
+  
+  
+  
+jobs:
+  Dev-AKS-Core-Infra-PreReq:
+    runs-on: windows-latest
+    steps:  
+      - uses: actions/checkout@v2 
+      - name: Create deployment
+        uses: chrnorm/deployment-action@releases/v1
+        id: deployment
+        with:
+          initial_status: in_progress
+          token: "${{ env.DEPLOY_TOKEN_GITHUB }}"
+          environment: dev   
+      
+      - name: Login via Az module
+        uses: azure/login@v1
+        with:
+          creds: ${{secrets.DEV_AZURE_CREDENTIALS}}
+          enable-AzPSSession: true 
+      - name: Dev - AKS Core Infra Deployment
+        uses: azure/powershell@v1
+        with:
+          azPSVersion: '3.1.0'
+          inlineScript: |
+                        Get-AzSubscription
+                        choco install terraform
+                        .\az-aks\k8s-core-resourcesv2.ps1 -K8SLogMonitoringType EFKinCluster -K8SMetricsMonitoringType HAPrometheus-Thanos `
+                        -requireDefectDojo true -requireSonarQube true -applyTFTemplates "true" `
+                        -cloudProvider az -createSPNifNotExists4K8S true -dryRunforGithubActions false `
+                        -requireTLSSecrets true -k8sEnvironment DEV -IngressController Nginx -Policies "DIY-GateKeeper"
+
+#Do not set createSPNifNotExists4K8S or dryRunforGithubActions to true  in the workflow, this is a chicken or egg situation. The SPN must exist before workflow can use it.
+#The SPN needs to be created locally(on laptop) and its credentials set as Git secret for the workflow to run.
+
+      - name: Update deployment status (success)
+        if: success()
+        uses: chrnorm/deployment-status@releases/v1
+        with:
+          token: "${{ env.DEPLOY_TOKEN_GITHUB }}"
+          state: "success"
+          deployment_id: ${{ steps.deployment.outputs.deployment_id }}
+
+      - name: Update deployment status (failure)
+        if: failure()
+        uses: chrnorm/deployment-status@releases/v1
+        with:
+          token: "${{ env.DEPLOY_TOKEN_GITHUB }}"
+          state: "failure"
+          deployment_id: ${{ steps.deployment.outputs.deployment_id }}
+                        
+      

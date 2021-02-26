@@ -1,0 +1,33 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx-privileged
+  namespace: dev
+  annotations: 
+    linkerd.io/inject: disabled
+  namespace: dev
+spec:
+  containers:
+    - name: nginx-privileged      
+      image: nginx
+      securityContext:
+        privileged: true
+  #serviceAccountName: build-robot
+--- 
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx-privileged
+  namespace: devops-addons
+  annotations: 
+    linkerd.io/inject: disabled
+  namespace: devops-addons
+spec:
+  containers:
+    - name: nginx-privileged      
+      image: nginx
+      securityContext:
+        privileged: true
+  #serviceAccountName: build-robot
+
+# This is a test pod to validate that the Azure Policy is flagging this pod.

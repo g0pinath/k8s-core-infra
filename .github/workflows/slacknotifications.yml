@@ -1,0 +1,510 @@
+
+name: Slack Notifications
+on:
+  
+  push:                 # A code push is triggered.         https://docs.github.com/en/developers/webhooks-and-events/webhook-events-and-payloads#push
+    branches:           # White list of branches.
+      - master
+      - dev*
+  release:              # A release is created or updated.  https://docs.github.com/en/developers/webhooks-and-events/webhook-events-and-payloads#release
+    types:
+      - released        # A release or draft of a release is published, or a pre-release is changed to a release
+  deployment:           # A deployment is created.          https://docs.github.com/en/v3/repos/deployments/#list-deployments
+  deployment_status:    # A deployment is created.          https://docs.github.com/en/v3/repos/deployments/#list-deployment-statuses
+env:
+  SLACK_CHANNEL_PROD: ${{ secrets.SLACK_WEBHOOK_GITHUBDEPLOYMENTS_PROD }}   
+  # Slack channel web hook for PROD deployments - only when a deployment in GIT is created.
+  SLACK_CHANNEL_DEV: ${{ secrets.SLACK_WEBHOOK_GITHUB_REPO_ACTIVITIES }} 
+  # Slack channel web hook for the devs - code checkins, PR activities etc
+  SLACK_CHANNEL_NONPROD: ${{ secrets.SLACK_WEBHOOK_GITHUBDEPLOYMENTS_NONPROD }} 
+  # Slack channel web hook for NONPROD deployments - only when a deployment in GIT is created.
+jobs:
+  DEV:
+    runs-on: ubuntu-latest
+    steps:
+     
+      - name: Push
+        if: github.event_name == 'push'
+        uses: tokorom/action-slack-incoming-webhook@master
+        env:
+          INCOMING_WEBHOOK_URL: ${{env.SLACK_CHANNEL_DEV}}
+          TITLE: ":white_check_mark: *<${{ github.event.sender.html_url }}|${{github.event.sender.login}}> pushed changes to <${{ github.event.repository.html_url }}|${{github.event.repository.name}}>*"
+          BODY: "${{github.event.repository.description}}\n\n- ${{ join(github.event.commits.*.message, '\n- ')}}"
+          BUTTON: "Compare Changes"
+          URL: ${{github.event.compare}}
+          ICON: ${{github.event.sender.avatar_url}}
+          FOOTER: "Do you need to rebase onto *${{ github.event.ref }}*?"
+        with:
+          blocks: |
+            [
+              {
+                "type": "section",
+                "text": {
+                  "type": "mrkdwn",
+                  "text": "${{env.TITLE}}"
+                  }
+                },
+                {
+                "type": "divider"
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "${{env.BODY}} "
+                  },
+                  "accessory": {
+                    "type": "button",
+                    "text": {
+                      "type": "plain_text",
+                      "text": "${{env.BUTTON}}",
+                      "emoji": true
+                    },
+                    "url": "${{env.URL}}"
+                  }
+                },
+                {
+                  "type": "divider"
+                },
+                {
+                "type": "context",
+                "elements": [
+                  {
+                    "type": "image",
+                    "image_url": "${{env.ICON}}",
+                    "alt_text": "Icon"
+                  },
+                  {
+                    "type": "mrkdwn",
+                    "text": "${{env.FOOTER}}"
+                  }
+                ]
+              }
+            ]
+      - name: Deployment Started
+        if: github.event_name == 'deployment' && github.event.action == 'created' &&  github.event.deployment.environment != 'production'
+        uses: tokorom/action-slack-incoming-webhook@master
+        env:
+          INCOMING_WEBHOOK_URL: ${{env.SLACK_CHANNEL_NONPROD}}
+          TITLE: ":arrow_forward: *<${{ github.event.repository.html_url }}|${{github.event.repository.name}}>* deployment to ${{ github.event.deployment.environment }} started..."
+          BODY: "${{github.event.repository.description}} "
+          BUTTON: "Check Status"
+          URL: "${{github.event.repository.html_url}}/deployments"
+          ICON: ${{ github.event.deployment.creator.avatar_url }}
+          FOOTER: "*<${{ github.event.deployment.creator.html_url }}|${{github.event.deployment.creator.login}}>*"
+        with:
+          blocks: |
+            [
+              {
+                "type": "section",
+                "text": {
+                  "type": "mrkdwn",
+                  "text": "${{env.TITLE}}"
+                  }
+                },
+                {
+                "type": "divider"
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "${{env.BODY}} "
+                  },
+                  "accessory": {
+                    "type": "button",
+                    "text": {
+                      "type": "plain_text",
+                      "text": "${{env.BUTTON}}",
+                      "emoji": true
+                    },
+                    "url": "${{env.URL}}"
+                  }
+                },
+                {
+                  "type": "divider"
+                },
+                {
+                "type": "context",
+                "elements": [
+                  {
+                    "type": "image",
+                    "image_url": "${{env.ICON}}",
+                    "alt_text": "Icon"
+                  },
+                  {
+                    "type": "mrkdwn",
+                    "text": "${{env.FOOTER}}"
+                  }
+                ]
+              }
+            ]
+
+      - name: Deployment Succeeded
+        if: github.event_name == 'deployment_status' && github.event.deployment_status.state == 'success' && github.event.deployment.environment != 'production'
+        uses: tokorom/action-slack-incoming-webhook@master
+        env:
+          INCOMING_WEBHOOK_URL: ${{env.SLACK_CHANNEL_NONPROD}}
+          TITLE: ":heavy_check_mark: Successfully deployed *<${{ github.event.repository.html_url }}|${{github.event.repository.name}}>* to ${{ github.event.deployment.environment }}."
+          BODY: "Check the deployment history for full details."
+          BUTTON: "Deployment History"
+          URL: "${{github.event.repository.html_url}}/deployments"
+          ICON: ${{ github.event.deployment_status.creator.avatar_url }}
+          FOOTER: "*<${{ github.event.deployment_status.creator.html_url }}|${{github.event.deployment_status.creator.login}}>*"
+        with:
+          blocks: |
+            [
+              {
+                "type": "section",
+                "text": {
+                  "type": "mrkdwn",
+                  "text": "${{env.TITLE}}"
+                  }
+                },
+                {
+                "type": "divider"
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "${{env.BODY}} "
+                  },
+                  "accessory": {
+                    "type": "button",
+                    "text": {
+                      "type": "plain_text",
+                      "text": "${{env.BUTTON}}",
+                      "emoji": true
+                    },
+                    "url": "${{env.URL}}"
+                  }
+                },
+                {
+                  "type": "divider"
+                },
+                {
+                "type": "context",
+                "elements": [
+                  {
+                    "type": "image",
+                    "image_url": "${{env.ICON}}",
+                    "alt_text": "Icon"
+                  },
+                  {
+                    "type": "mrkdwn",
+                    "text": "${{env.FOOTER}}"
+                  }
+                ]
+              }
+            ]
+
+      - name: Deployment Failure or Error
+        if: github.event_name == 'deployment_status' && (github.event.deployment_status.state == 'error' || github.event.deployment_status.state == 'failure') 
+        uses: tokorom/action-slack-incoming-webhook@master
+        env:
+          INCOMING_WEBHOOK_URL: ${{env.SLACK_CHANNEL_NONPROD}}
+          TITLE: ":black_square_for_stop: *<${{ github.event.repository.html_url }}|${{github.event.repository.name}}> deployment to ${{ github.event.deployment.environment }} ${{github.event.deployment_status.state}}!*"
+          BODY: "Check the deployment history to see the logs."
+          BUTTON: "Open History"
+          URL: "${{github.event.repository.html_url}}/deployments"
+          ICON: ${{ github.event.deployment_status.creator.avatar_url }}
+          FOOTER: "*<${{ github.event.deployment_status.creator.html_url }}|${{github.event.deployment_status.creator.login}}>*"
+        with:
+          blocks: |
+            [
+              {
+                "type": "section",
+                "text": {
+                  "type": "mrkdwn",
+                  "text": "${{env.TITLE}}"
+                  }
+                },
+                {
+                "type": "divider"
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "${{env.BODY}} "
+                  },
+                  "accessory": {
+                    "type": "button",
+                    "text": {
+                      "type": "plain_text",
+                      "text": "${{env.BUTTON}}",
+                      "emoji": true
+                    },
+                    "url": "${{env.URL}}"
+                  }
+                },
+                {
+                  "type": "divider"
+                },
+                {
+                "type": "context",
+                "elements": [
+                  {
+                    "type": "image",
+                    "image_url": "${{env.ICON}}",
+                    "alt_text": "Icon"
+                  },
+                  {
+                    "type": "mrkdwn",
+                    "text": "${{env.FOOTER}}"
+                  }
+                ]
+              }
+            ]
+
+      - name: Failure Notification
+        if: ${{ failure() }}
+        uses: tokorom/action-slack-incoming-webhook@master
+        env:
+          INCOMING_WEBHOOK_URL: ${{env.SLACK_CHANNEL_NONPROD}}
+        with:
+          text: ":arrow_forward: Slack notifications for event ${{ github.event_name }} failed for ${{github.repository}}. [No. ${{github.run_id}}]"
+
+  PROD:
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Release Published
+        if: github.event_name == 'release' && github.event.action == 'released' 
+        uses: tokorom/action-slack-incoming-webhook@master
+        env:
+          INCOMING_WEBHOOK_URL: ${{env.SLACK_CHANNEL_PROD}}
+          TITLE: ":loudspeaker: *<${{github.event.release.html_url}}|${{github.event.repository.name}} ${{github.event.release.tag_name}}>* is ready for verification testing."
+          BODY: "*${{github.event.release.name}} Release Notes*\n${{github.event.release.body}}"
+          BUTTON: "Open ${{github.event.release.tag_name}}"
+          URL: ${{github.event.release.html_url}}
+          FOOTER: ":information_source: *<${{ github.event.repository.html_url }}|${{github.event.repository.name}} repository>*"
+        with:
+          blocks: |
+            [
+              {
+                "type": "section",
+                "text": {
+                  "type": "mrkdwn",
+                  "text": "${{env.TITLE}}"
+                  }
+                },
+                {
+                "type": "divider"
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "${{env.BODY}} "
+                  },
+                  "accessory": {
+                    "type": "button",
+                    "text": {
+                      "type": "plain_text",
+                      "text": "${{env.BUTTON}}",
+                      "emoji": true
+                    },
+                    "url": "${{env.URL}}"
+                  }
+                },
+                {
+                  "type": "divider"
+                },
+                {
+                "type": "context",
+                "elements": [
+                  {
+                    "type": "mrkdwn",
+                    "text": "${{env.FOOTER}}"
+                  }
+                ]
+              }
+            ]
+
+      - name: Deployment Started
+        if: github.event_name == 'deployment' && github.event.action == 'created' && github.event.deployment.environment == 'production'
+        uses: tokorom/action-slack-incoming-webhook@master
+        env:
+          INCOMING_WEBHOOK_URL: ${{env.SLACK_CHANNEL_PROD}}
+          TITLE: ":arrow_forward: *<${{ github.event.repository.html_url }}|${{github.event.repository.name}}>* deployment to ${{ github.event.deployment.environment }} started..."
+          BODY: "${{github.event.repository.description}} "
+          BUTTON: "Check Status"
+          URL: "${{github.event.repository.html_url}}/deployments"
+          ICON: ${{ github.event.deployment.creator.avatar_url }}
+          FOOTER: "*<${{ github.event.deployment.creator.html_url }}|${{github.event.deployment.creator.login}}>*"
+        with:
+          blocks: |
+            [
+              {
+                "type": "section",
+                "text": {
+                  "type": "mrkdwn",
+                  "text": "${{env.TITLE}}"
+                  }
+                },
+                {
+                "type": "divider"
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "${{env.BODY}} "
+                  },
+                  "accessory": {
+                    "type": "button",
+                    "text": {
+                      "type": "plain_text",
+                      "text": "${{env.BUTTON}}",
+                      "emoji": true
+                    },
+                    "url": "${{env.URL}}"
+                  }
+                },
+                {
+                  "type": "divider"
+                },
+                {
+                "type": "context",
+                "elements": [
+                  {
+                    "type": "image",
+                    "image_url": "${{env.ICON}}",
+                    "alt_text": "Icon"
+                  },
+                  {
+                    "type": "mrkdwn",
+                    "text": "${{env.FOOTER}}"
+                  }
+                ]
+              }
+            ]
+
+      - name: Deployment Succeeded
+        if: github.event_name == 'deployment_status' && github.event.deployment_status.state == 'success' &&  github.event.deployment.environment == 'production'
+        uses: tokorom/action-slack-incoming-webhook@master
+        env:
+          INCOMING_WEBHOOK_URL: ${{env.SLACK_CHANNEL_PROD}}
+          TITLE: ":heavy_check_mark: Successfully deployed *<${{ github.event.repository.html_url }}|${{github.event.repository.name}}>* to ${{ github.event.deployment.environment }}."
+          BODY: "Check the deployment history for full details."
+          BUTTON: "Deployment History"
+          URL: "${{github.event.repository.html_url}}/deployments"
+          ICON: ${{ github.event.deployment_status.creator.avatar_url }}
+          FOOTER: "*<${{ github.event.deployment_status.creator.html_url }}|${{github.event.deployment_status.creator.login}}>*"
+        with:
+          blocks: |
+            [
+              {
+                "type": "section",
+                "text": {
+                  "type": "mrkdwn",
+                  "text": "${{env.TITLE}}"
+                  }
+                },
+                {
+                "type": "divider"
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "${{env.BODY}} "
+                  },
+                  "accessory": {
+                    "type": "button",
+                    "text": {
+                      "type": "plain_text",
+                      "text": "${{env.BUTTON}}",
+                      "emoji": true
+                    },
+                    "url": "${{env.URL}}"
+                  }
+                },
+                {
+                  "type": "divider"
+                },
+                {
+                "type": "context",
+                "elements": [
+                  {
+                    "type": "image",
+                    "image_url": "${{env.ICON}}",
+                    "alt_text": "Icon"
+                  },
+                  {
+                    "type": "mrkdwn",
+                    "text": "${{env.FOOTER}}"
+                  }
+                ]
+              }
+            ]
+
+      - name: Deployment Failure or Error
+        if: github.event_name == 'deployment_status' && (github.event.deployment_status.state == 'error' || github.event.deployment_status.state == 'failure') 
+        uses: tokorom/action-slack-incoming-webhook@master
+        env:
+          INCOMING_WEBHOOK_URL: ${{env.SLACK_CHANNEL_PROD}}
+          TITLE: ":black_square_for_stop: *<${{ github.event.repository.html_url }}|${{github.event.repository.name}}> deployment to ${{ github.event.deployment.environment }} ${{github.event.deployment_status.state}}!*"
+          BODY: "Check the deployment history to see the logs."
+          BUTTON: "Open History"
+          URL: "${{github.event.repository.html_url}}/deployments"
+          ICON: ${{ github.event.deployment_status.creator.avatar_url }}
+          FOOTER: "*<${{ github.event.deployment_status.creator.html_url }}|${{github.event.deployment_status.creator.login}}>*"
+        with:
+          blocks: |
+            [
+              {
+                "type": "section",
+                "text": {
+                  "type": "mrkdwn",
+                  "text": "${{env.TITLE}}"
+                  }
+                },
+                {
+                "type": "divider"
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "${{env.BODY}} "
+                  },
+                  "accessory": {
+                    "type": "button",
+                    "text": {
+                      "type": "plain_text",
+                      "text": "${{env.BUTTON}}",
+                      "emoji": true
+                    },
+                    "url": "${{env.URL}}"
+                  }
+                },
+                {
+                  "type": "divider"
+                },
+                {
+                "type": "context",
+                "elements": [
+                  {
+                    "type": "image",
+                    "image_url": "${{env.ICON}}",
+                    "alt_text": "Icon"
+                  },
+                  {
+                    "type": "mrkdwn",
+                    "text": "${{env.FOOTER}}"
+                  }
+                ]
+              }
+            ]
+
+
+      - name: Failure Notification
+        if: ${{ failure() }} 
+        uses: tokorom/action-slack-incoming-webhook@master
+        env:
+          INCOMING_WEBHOOK_URL: ${{env.SLACK_CHANNEL_DEV}}
+        with:
+          text: ":arrow_forward: Slack notifications for event ${{ github.event_name }} failed for ${{github.repository}}. [No. ${{github.run_id}}]"

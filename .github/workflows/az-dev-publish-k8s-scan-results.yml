@@ -1,0 +1,77 @@
+name: AzDev-Kube-Bench-Kube-hunter-reports
+env:
+  DEFECTDOJO_API_TOKEN:  ${{ secrets.DEFECTDOJO_API_TOKEN }}
+  Kube_Bench_Engagement_Name: 'kube-bench'
+  DEV_ARM_SUBSCRIPTION_ID: ${{ secrets.DEV_ARM_SUBSCRIPTION_ID }} 
+  DEV_K8S_RG_NAME:  "RG-DEV-K8S-CLUSTER" 
+  DEV_K8S_KV_NAME: ${{ secrets.DEV_K8S_KV_NAME }} 
+  DEV_K8S_NAME: ${{ secrets.DEV_K8S_NAME }} 
+  
+  DD_Admin_User: admin
+  DD_Admin_Password: ${{ secrets.DEV_DD_ADMIN_PWD }}
+on:
+  workflow_dispatch:  
+  #push:
+  #  branches: [ develop ]   
+  schedule:
+    - cron: "0 13 * * *"  
+
+jobs:
+  DefectDojo-Report:
+    runs-on: windows-latest  # For a list of available runner types, refer to  # https://help.github.com/en/actions/reference/workflow-syntax-for-github-actions#jobsjob_idruns-on
+    #needs: MRS-Dev-PreValidation
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: setup DD - Create Product Types and Products
+        run: |
+                #To fetch the tokens
+                $headers = @{
+                    'username' = $env:DD_Admin_User; 'password' = $env:DD_Admin_Password
+                }
+                $baseURL="https://metdojo.metricon.com.au"  
+                $TokenRaw = Invoke-WebRequest -Uri https://metdojo.metricon.com.au/api/v2/api-token-auth/ -Method 'POST'  -Body $headers
+                $Token = ($TokenRaw | ConvertFrom-Json).Token
+                $env:DEFECTDOJO_API_TOKEN = $Token
+
+                .\devsecops\Scripts\CreateDDProductypes.ps1 -product_type k8s-scans -baseURL $baseURL
+                .\devsecops\Scripts\CreateDDProducts.ps1 -product_name kube-bench -prod_type k8s-scans  `
+                -tags kube-bench -description kube-bench -lifecyle "Development" -baseURL $baseURL 
+                #create an engagement if not exists.
+                .\devsecops\Scripts\CreateDDEngagements.ps1 -product_name kube-bench -prod_type k8s-scans `
+                 -tags kube-bench -description kube-bench -lifecyle Development -baseURL $baseURL 
+      - name: Login via Az module
+        uses: azure/login@v1
+        with:
+          creds: ${{secrets.DEV_AZURE_CREDENTIALS}}
+          enable-AzPSSession: true 
+#Export the kube-bench pod logs to json.                          
+      - name: Kubectl logs <kube-bench-pod> && Dump it to JSON
+        run: |
+              az account set -s $env:DEV_ARM_SUBSCRIPTION_ID 
+              az aks Get-Credentials -g $env:DEV_K8S_RG_NAME  -n $env:DEV_K8S_NAME --overwrite-existing --admin
+              choco install kubernetes-cli
+              #find the pod name
+              $podsjson = kubectl get pods -n devops-addons -o json | convertfrom-json
+              $kube_bench_pod_name = ($podsjson.items | where {$_.metadata.name -like "*kube-bench*"}).metadata.name
+              $json = kubectl logs $kube_bench_pod_name  -n devops-addons  | ConvertFrom-Json -Depth 100 
+              $json.controls | ConvertTo-Json -Depth 100 | out-file .\devsecops\Scripts\kube-bench.json
+              #we are adding [] at the beginning and end DD needs the json to be in this format.
+              $jsonStr = Get-Content .\devsecops\Scripts\kube-bench.json
+              $jsonStr = "[[" + $jsonStr + "]]"
+              $jsonStr  | ConvertFrom-Json -Depth 100 | ConvertTo-Json -Depth 100 | out-file .\devsecops\Scripts\kube-bench.json
+      - name: Publish JSON reports to DefectDojo
+        run: |
+                $LatestReportFile = "kube-bench.json"
+                $baseURL="https://az-defectdojo-dev.cloudkube.xyz" 
+                
+                $env:Product_Name = "kube-bench"
+                .\devsecops\Scripts\CloseOpenFindings.ps1 -product_name $env:Product_Name -active "true" -baseURL $baseURL
+                .\devsecops\Scripts\PosttoDefectDojo.ps1 -tags "kube-bench" -scan_type "kube-bench Scan" -engagement $env:Kube_Bench_Engagement_Name `
+                -close_old_findings $true -skip_duplicates $true -baseURL $baseURL `
+                -multipartFile "$pwd\devsecops\Scripts\$LatestReportFile" -file_name 'kube-bench.json'                            
+              
+      #scan type is case sensitive. Available values are below -- reference only.
+      #Available values : , Netsparker Scan, Burp Scan, Nessus Scan, Nmap Scan, Nexpose Scan, AppSpider Scan, Veracode Scan, Checkmarx Scan, Checkmarx Scan detailed, Crashtest Security JSON File, Crashtest Security XML File, ZAP Scan, Arachni Scan, VCG Scan, Dependency Check Scan, Dependency Track Finding Packaging Format (FPF) Export, Retire.js Scan, Node Security Platform Scan, NPM Audit Scan, Qualys Scan, Qualys Infrastructure Scan (WebGUI XML), Qualys Webapp Scan, OpenVAS CSV, Snyk Scan, Generic Findings Import, Trustwave Scan (CSV), SKF Scan, Clair Klar Scan, Bandit Scan, ESLint Scan, SSL Labs Scan, Acunetix Scan, Fortify Scan, Gosec Scanner, SonarQube Scan, SonarQube Scan detailed, SonarQube API Import, MobSF Scan, Trufflehog Scan, Nikto Scan, Clair Scan, Brakeman Scan, SpotBugs Scan, AWS Scout2 Scan, AWS Prowler Scan, IBM AppScan DAST, PHP Security Audit v2, PHP Symfony Security Check, Safety Scan, DawnScanner Scan, Anchore Engine Scan, Bundler-Audit Scan, Twistlock Image Scan, Kiuwan Scan, Blackduck Hub Scan, Blackduck Component Risk, Openscap Vulnerability Scan, Wapiti Scan, Immuniweb Scan, Sonatype Application Scan, Cobalt.io Scan, Mozilla Observatory Scan, Whitesource Scan, Contrast Scan, Microfocus Webinspect Scan, Wpscan, Sslscan, JFrog Xray Scan, Sslyze Scan, SSLyze 3 Scan (JSON), Testssl Scan, Hadolint Dockerfile check, Aqua Scan, HackerOne Cases, Xanitizer Scan, Outpost24 Scan, Burp Enterprise Scan, DSOP Scan, Trivy Scan, Anchore Enterprise Policy Check, Gitleaks Scan, Choctaw Hog Scan, Harbor Vulnerability Scan, Github Vulnerability Scan, Yarn Audit Scan, BugCrowd Scan, GitLab SAST Report, AWS Security Hub Scan, GitLab Dependency Scanning Report, HuskyCI Report, Semgrep JSON Report, Risk Recon API Importer, DrHeader JSON Importer, Checkov Scan, kube-bench Scan, CCVS Report, ORT evaluated model Importer, SARIF
+      #the json file has to be in a specific format for DD to consume, refer the working sample in devsecops\scripts folder.

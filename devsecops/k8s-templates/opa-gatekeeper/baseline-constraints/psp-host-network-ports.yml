@@ -1,0 +1,15 @@
+apiVersion: constraints.gatekeeper.sh/v1beta1
+kind: K8sAzureHostNetworkingPorts
+metadata:
+  name: psp-host-network-ports
+spec:
+  enforcementAction: deny
+  match:
+    excludedNamespaces: ["kube-system", "gatekeeper-system", "monitoring", "linkerd"]
+    kinds:
+      - apiGroups: [""]
+        kinds: ["Pod"]
+  parameters:
+    allowHostNetwork: false
+    #minPort: []
+    #maxPort: []

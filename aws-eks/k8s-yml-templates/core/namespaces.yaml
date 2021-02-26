@@ -1,0 +1,33 @@
+---  
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: devsecops
+  annotations: 
+    linkerd.io/inject: disabled
+    #config.linkerd.io/proxy-cpu-request: "0.01" 
+    prometheus.io/scrape: "true"
+---
+
+  apiVersion: v1
+  kind: Namespace
+  metadata:
+    name: ingress
+    annotations: 
+      linkerd.io/inject: disabled
+---
+  apiVersion: v1
+  kind: Namespace
+  metadata:
+    name: monitoring #for EFK/Loki-stack/Prometheus/Grafana
+    annotations: 
+      linkerd.io/inject: disabled
+---
+  apiVersion: v1
+  kind: Namespace
+  metadata:
+    name: dev #for EFK/Loki-stack/Prometheus/Grafana
+    annotations: 
+      linkerd.io/inject: enabled
+    
+---

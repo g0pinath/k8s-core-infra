@@ -1,0 +1,14 @@
+groups:
+  - name: my-rules
+    rules:
+    - record: job:node_cpu_seconds:avg_idle
+      expr: avg without(cpu)(rate(node_cpu_seconds_total{mode="idle"}[5m]))
+      
+    - record: job:node_cpu_seconds:avg_not_idle
+      expr: avg without(cpu)(rate(node_cpu_seconds_total{mode!="idle"}[5m]))
+      
+  - name: my-rules_new
+    rules:
+      
+    - record: job:node_cpu_seconds:avg_not_idle_new
+      expr: avg without(cpu)(rate(node_cpu_seconds_total{mode!="idle"}[5m]))

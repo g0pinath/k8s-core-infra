@@ -1,0 +1,44 @@
+#https://www.bookstack.cn/read/linkerd-2.6/102052b392dff6f3.md
+apiVersion: v1
+kind: Secret
+type: Opaque
+metadata:
+  name: web-ingress-auth
+  namespace: linkerd
+data:
+  auth: YWRtaW46JGFwcjEkbjdDdTZnSGwkRTQ3b2dmN0NPOE5SWWpFakJPa1dNLgoK
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: web-ingress
+  namespace: linkerd
+  annotations:
+    kubernetes.io/ingress.class: nginx   
+spec:
+    rules:
+    - host: linkerd-web-prda.linkerd.svc.cluster.local
+      http:
+        paths:
+        - backend:
+            serviceName: linkerd-web
+            servicePort: 8084
+---
+
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: linkerd-prometheus
+  namespace: linkerd
+  annotations:
+    kubernetes.io/ingress.class: nginx   
+spec:
+    rules:
+    - host: linkerd-prometheus-prda.cloudkube.xyz
+      http:
+        paths:
+        - backend:
+            serviceName: linkerd-prometheus
+            servicePort: 9090
+---

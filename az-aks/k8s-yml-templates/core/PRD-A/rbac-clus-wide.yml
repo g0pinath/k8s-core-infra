@@ -1,0 +1,16 @@
+
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: Cluster-Admin-role-binding
+subjects:
+- kind: Group
+  name: 76afa8ae-3b6c-4b53-bc36-43ddb4877cb9 #SID of the Azure AD Group aks-prod-admins
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: ClusterRole
+  name: cluster-admin
+  apiGroup: rbac.authorization.k8s.io
+---
+
+
