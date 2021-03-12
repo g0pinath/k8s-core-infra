@@ -9,8 +9,10 @@
 | Name | Description |
 | - | - |
 | ARM_TENANT_ID  | Azure Directory/Tenant ID  |
+| DEPLOY_TOKEN_GITHUB  | Git PAT to be able to create deployments and releases  |
+
 -----------------------------------------------------------------------------------------------------
-## For Azure - common for both regions in PROD i.e., needs to be created for deploying AKS in single region or multiple region
+## For Azure - common for both PROD deployment types i.e., whethere the cluster needs to be created  in a single region or in multiple regions.
 | Name | Description |
 | - | - |
 | PRD_DD_ADMIN_PWD |  DefectDojo admin password for login. If none provided, you will need to retrieve the password using kubectl get secret command |

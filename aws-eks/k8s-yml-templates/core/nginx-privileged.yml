@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-privileged-deployment
+  labels:
+    app: nginx
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: ubuntu
+        image: ubuntu
+        ports:
+        - containerPort: 80
+        securityContext:
+          privileged: false
+        resources:
+          limits:
+            memory: "600Mi"
+            cpu: "250m"

@@ -1,0 +1,19 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: defectdojo
+  namespace: devops-addons
+spec:
+    tls:
+      - hosts:
+        #- aws-defectdojo.cloudkube.xyz
+        - defectdojo-dev.cloudkube.xyz
+        secretName: ingress-secret-tls 
+    rules:
+    - host: defectdojo-dev.metdojocloudkube.xyz
+      http:
+        paths:
+        - backend:
+            serviceName: defectdojo-django
+            servicePort: 80
+---

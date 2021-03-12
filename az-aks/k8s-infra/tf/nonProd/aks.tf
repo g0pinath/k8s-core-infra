@@ -64,26 +64,30 @@ resource "azurerm_kubernetes_cluster_node_pool" "apppools" {
   max_count       = var.k8s_properties.small_pool_max_count
   availability_zones = ["1", "2"]
   enable_auto_scaling = true
-  max_pods    = 30
+  max_pods    = 100
+  priority        = "Spot"
+  eviction_policy = "Delete"
+  spot_max_price  = "-1"
 
   tags = {
     Environment = "nonprod"
   }
 }
 
-/*
-resource "azurerm_kubernetes_cluster_node_pool" "apppools-large" {
-  name                  = var.k8s_properties.large_nodepool_name
+
+resource "azurerm_kubernetes_cluster_node_pool" "apppools-monitoring" {
+  name                  = var.k8s_properties.monitoring_nodepool_name
   kubernetes_cluster_id = azurerm_kubernetes_cluster.aks-np.id
-  vm_size               = var.k8s_properties.large_pool_size
+  vm_size               = var.k8s_properties.monitoring_pool_size
   #node_count            = 1
-  min_count       = var.k8s_properties.large_pool_min_count
-  max_count       = var.k8s_properties.large_pool_max_count
+  min_count       = var.k8s_properties.monitoring_pool_min_count
+  max_count       = var.k8s_properties.monitoring_pool_max_count
   availability_zones = ["1", "2"]
   enable_auto_scaling = true
-
+  priority        = "Spot"
+  eviction_policy = "Delete"
+  spot_max_price  = "-1"
   tags = {
     Environment = "nonprod"
   }
 }
-*/

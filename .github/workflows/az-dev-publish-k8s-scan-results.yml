@@ -30,8 +30,8 @@ jobs:
                 $headers = @{
                     'username' = $env:DD_Admin_User; 'password' = $env:DD_Admin_Password
                 }
-                $baseURL="https://metdojo.metricon.com.au"  
-                $TokenRaw = Invoke-WebRequest -Uri https://metdojo.metricon.com.au/api/v2/api-token-auth/ -Method 'POST'  -Body $headers
+                $baseURL="https://defectdojo-dev.cloudkube.xyz"  
+                $TokenRaw = Invoke-WebRequest -Uri https://defectdojo-dev.cloudkube.xyz/api/v2/api-token-auth/ -Method 'POST'  -Body $headers
                 $Token = ($TokenRaw | ConvertFrom-Json).Token
                 $env:DEFECTDOJO_API_TOKEN = $Token
 
@@ -59,6 +59,33 @@ jobs:
               $json.controls | ConvertTo-Json -Depth 100 | out-file .\devsecops\Scripts\kube-bench.json
               #we are adding [] at the beginning and end DD needs the json to be in this format.
               $jsonStr = Get-Content .\devsecops\Scripts\kube-bench.json
+              $jsonStr = "[[" + $jsonStr + "]]"
+              $jsonStr  | ConvertFrom-Json -Depth 100 | ConvertTo-Json -Depth 100 | out-file .\devsecops\Scripts\kube-bench.json
+      - name: Publish JSON reports to DefectDojo
+        run: |
+                $LatestReportFile = "kube-bench.json"
+                $baseURL="https://az-defectdojo-dev.cloudkube.xyz" 
+                
+                $env:Product_Name = "kube-bench"
+                .\devsecops\Scripts\CloseOpenFindings.ps1 -product_name $env:Product_Name -active "true" -baseURL $baseURL
+                .\devsecops\Scripts\PosttoDefectDojo.ps1 -tags "kube-bench" -scan_type "kube-bench Scan" -engagement $env:Kube_Bench_Engagement_Name `
+                -close_old_findings $true -skip_duplicates $true -baseURL $baseURL `
+                -multipartFile "$pwd\devsecops\Scripts\$LatestReportFile" -file_name 'kube-bench.json'                            
+#Export the kube-hunter pod logs to json.                          
+      - name: Kubectl logs <kube-hunter-pod> && Dump it to JSON
+        run: |
+              az account set -s $env:DEV_ARM_SUBSCRIPTION_ID 
+              az aks Get-Credentials -g $env:DEV_K8S_RG_NAME  -n $env:DEV_K8S_NAME --overwrite-existing --admin
+              choco install kubernetes-cli
+              #find the pod name
+              $podsjson = kubectl get pods -n devops-addons -o json | convertfrom-json
+              $kube_hunter_pod_name = ($podsjson.items | where {$_.metadata.name -like "*kube-hunter*"}).metadata.name
+              $json = kubectl logs $kube_hunter_pod_name  -n devops-addons  
+              $json = $json[4] # the 5th line is what we need
+              $json = ($json | ConvertFrom-Json | Select Vulnerabilities).Vulnerabilities
+              $json | ConvertTo-Json -Depth 100 | out-file .\devsecops\Scripts\kube-hunter.json
+              #we are adding [] at the beginning and end DD needs the json to be in this format.
+              $jsonStr = Get-Content .\devsecops\Scripts\kube-hunter.json
               $jsonStr = "[[" + $jsonStr + "]]"
               $jsonStr  | ConvertFrom-Json -Depth 100 | ConvertTo-Json -Depth 100 | out-file .\devsecops\Scripts\kube-bench.json
       - name: Publish JSON reports to DefectDojo

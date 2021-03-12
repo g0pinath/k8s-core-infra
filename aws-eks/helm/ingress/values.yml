@@ -1,0 +1,10 @@
+  controller:
+   service:
+    enabled: true
+    type: LoadBalancer
+    annotations: 
+      service.beta.kubernetes.io/aws-load-balancer-type: nlb
+   logging:
+    level: debug
+
+  # https://raw.githubusercontent.com/haproxytech/helm-charts/master/kubernetes-ingress/values.yaml

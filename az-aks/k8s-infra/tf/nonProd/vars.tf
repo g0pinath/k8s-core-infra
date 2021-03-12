@@ -99,19 +99,19 @@ variable "k8s_properties" {
       
       dns_prefix = "aks-np-ae"
       sys_nodepool_name = "sysnodepool"
-      sys_pool_size     = "Standard_B2S"
-      sys_pool_min_count =  2
-      sys_pool_max_count =  4
+      sys_pool_size     = "Standard_D2ds_v4"
+      sys_pool_min_count =  1
+      sys_pool_max_count =  3
       
       small_nodepool_name = "smallpool"
-      small_pool_size     = "Standard_B2S"
+      small_pool_size     = "Standard_D2ds_v4"
       small_pool_min_count =  2
-      small_pool_max_count =  4
+      small_pool_max_count =  40
 
-      large_nodepool_name = "largepool"
-      large_pool_size     = "Standard_B2S"
-      large_pool_min_count =  2
-      large_pool_max_count =  4
+      monitoring_nodepool_name = "monitorpool"
+      monitoring_pool_size     = "Standard_D2ds_v4"
+      monitoring_pool_min_count =  2
+      monitoring_pool_max_count =  4
 
     }
   

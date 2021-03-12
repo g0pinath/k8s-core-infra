@@ -1,0 +1,8 @@
+type: AZURE
+config:
+  storage_account: "azaks2021devtf01"
+  storage_account_key: '' #FROM GIT | $env:THANOS_LTR_SAKEY
+  container: "thanos"
+  endpoint: "blob.core.windows.net"
+  max_retries: 0
+  #replace with actuals for key

@@ -1023,7 +1023,7 @@ Function SetupK8SMetricsMonitoring($K8SMetricsMonitoringType, $K8SLogMonitoringT
           --set grafana\.ini.auth\.azuread.token_url="https://login.microsoftonline.com/$env:ARM_TENANT_ID/oauth2/v2.0/token"   `
          --set grafana\.ini.auth\.azuread.client_secret="$ENV:GRAFANA_CLIENT_SECRET" -n monitoring   #persistent is disabled by default.
               kubectl apply -f ./az-aks/k8s-yml-templates/prometheus-grafana/.  # to setup ingress 
-          remove-item $pwd/az-aks/k8s-yml-templates/prometheus-grafana/prom-values/$FolderName/object-store.yml -force    
+          #----TSONLY----#remove-item $pwd/az-aks/k8s-yml-templates/prometheus-grafana/prom-values/$FolderName/object-store.yml -force    
           helm upgrade --install prometheus-adapter prometheus-community/prometheus-adapter `
           -f .\az-aks\k8s-yml-templates\prometheus-grafana\prom-values\$FolderName\prom-adapter-values.yml -n monitoring
         }

@@ -1,0 +1,77 @@
+#---
+#apiVersion: extensions/v1beta1
+#kind: Ingress
+#metadata:
+#  name: prometheus
+#  namespace: monitoring
+#spec:
+#    tls:
+#      - hosts:
+#        - prometheus.cloudkube.xyz
+#        secretName: ingress-secret-tls 
+#    rules:
+#    - host: prometheus.cloudkube.xyz
+#      http:
+#        paths:
+#        - backend:
+#            serviceName: prometheus-operated #linkerd-prometheus 
+#            servicePort: 9090
+#---
+#apiVersion: extensions/v1beta1
+#kind: Ingress
+#metadata:
+#  name: thanos-web
+#  namespace: monitoring
+# annotations:
+#spec:
+#    tls:
+#      - hosts:
+#        - thanos.cloudkube.xyz
+#        secretName: ingress-secret-tls 
+#    rules:
+#    - host: thanos.cloudkube.xyz
+#      http:
+#        paths:
+#        - backend:
+#            serviceName: thanos-web
+#            servicePort: 10902
+---
+
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: grafana
+  namespace: monitoring 
+spec:
+    tls:
+      - hosts:
+        - dev-grafana.cloudkube.xyz
+        secretName: ingress-secret-tls 
+    rules:
+    - host: dev-grafana.cloudkube.xyz
+      http:
+        paths:
+        - backend:
+            serviceName: grafana
+            servicePort: 80
+---
+        
+
+#apiVersion: extensions/v1beta1
+#kind: Ingress
+#metadata:
+#  name: alertmanager
+#  namespace: monitoring
+#spec:
+#    tls:
+#      - hosts:
+#        - alertmanager.cloudkube.xyz
+#        secretName: ingress-secret-tls 
+#    rules:
+#    - host: alertmanager.cloudkube.xyz
+#      http:
+#        paths:
+#        - backend:
+#            serviceName: prometheus-kube-prometheus-alertmanager
+#            servicePort: 9093
+#---

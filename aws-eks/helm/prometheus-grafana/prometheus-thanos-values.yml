@@ -23,15 +23,9 @@
       enabled: false
     tls:
       enabled: false #if this is not false, the operator will be stuck in container creating status
+      
   prometheus:
     prometheusSpec:  
-      tolerations: 
-        - key: "kubernetes.azure.com/scalesetpriority"
-          operator: "Equal"
-          value: "spot"
-          effect: "NoSchedule"    
-      nodeSelector: 
-        agentpool: monitorpool #we are better off running prom in its own pool, or it keeps crashing during scale out operations(few 1000 pods created in a span of few mins)
       additionalScrapeConfigs:
           - job_name: 'votingapp'
             kubernetes_sd_configs:
@@ -42,7 +36,7 @@
             kubernetes_sd_configs:
               - role: endpoints
                 namespaces:
-                  names: ['dev']
+                  names: ['dev']                  
       #serviceMonitorSelectorNilUsesHelmValues: false  # to retrieve from all serices in all namespaces.
       #podMonitorSelectorNilUsesHelmValues: false  # to retrieve from all serices in all namespaces.
       retention: 1h
@@ -51,7 +45,7 @@
       ##
         volumeClaimTemplate:
           spec:
-            storageClassName: default
+            storageClassName: gp2
             accessModes: ["ReadWriteOnce"]
             resources:
               requests:

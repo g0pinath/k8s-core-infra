@@ -1,0 +1,23 @@
+#apiVersion: extensions/v1beta1
+#kind: Ingress
+#metadata:
+#  name: kibana
+#  namespace: monitoring
+
+#  annotations:
+#    kubernetes.io/ingress.class: nginx   
+#spec:
+#    tls:
+#      - hosts:
+#        - kibana.cloudkube.xyz
+#        secretName: ingress-secret-tls 
+#    rules:
+#    - host: kibana.cloudkube.xyz
+#      http:
+#        paths:
+#        - backend:
+#            serviceName: kibana
+#            servicePort: 5601
+#---
+
+###No authentication for Kibana by default. Oauth/Azure AD auth needs platinum version of elastic

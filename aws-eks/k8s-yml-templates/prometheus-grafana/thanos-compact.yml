@@ -1,0 +1,65 @@
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: thanos-compact
+  namespace: monitoring
+  labels:
+    app: thanos-compact
+spec:
+  replicas: 1
+  serviceName: thanos-compact
+  selector:
+    matchLabels:
+      app: thanos-compact
+  template:
+    metadata:
+      labels:
+        app: thanos-compact
+    spec:
+      containers:
+      - name: thanos-compact
+        image: quay.io/thanos/thanos:v0.18.0 #improbable/thanos:v0.5.0
+        resources:
+          limits:
+            cpu: 1
+            memory: 2Gi
+          requests:
+            cpu: 500m
+            memory: 1.5Gi
+        args:
+        - "compact"
+        - "--data-dir=/prometheus/compact"
+        - "--objstore.config-file=/config/thanos.yml"
+        - "--log.level=info"
+        - "--retention.resolution-raw=10d"
+        - "--retention.resolution-5m=5d"
+        - "--retention.resolution-1h=10d"
+        - "--consistency-delay=15m"
+        - "--wait"
+        ports:
+        - name: http
+          containerPort: 10902
+        - name: grpc
+          containerPort: 10901
+        - name: cluster
+          containerPort: 10900
+        volumeMounts:
+        - mountPath: /prometheus
+          name: thanos-compact-storage
+        - mountPath: /config/
+          name: thanos-config
+      volumes:
+      - name: thanos-config
+        secret:
+          secretName: thanos-objstore-config
+  volumeClaimTemplates:
+  - metadata:
+      name: thanos-compact-storage
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 10Gi
+
+#https://thanos.io/v0.16/components/compact.md/

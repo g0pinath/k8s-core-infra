@@ -1,0 +1,36 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: sonarqube
+  namespace: devops-addons
+spec:
+    tls:
+      - hosts:
+        #- sonarqube.cloudkube.xyz
+        - sonar-dev.cloudkube.xyz
+        secretName: ingress-secret-tls 
+    rules:
+    - host: sonar-dev.cloudkube.xyz
+      http:
+        paths:
+        - backend:
+            serviceName: sonarqube-sonarqube
+            servicePort: 9000
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: sonarqube-http
+  namespace: devops-addons
+
+spec:
+    rules:
+    - host: git-sonar-dev.cloudkube.xyz
+      http:
+        paths:
+        - backend:
+            serviceName: sonarqube-sonarqube
+            servicePort: 9000
+---
+#https://www.emtec.digital/think-hub/blogs/sonarqube-integration-azure-active-directory/
+#AAD redirect url for SPN https://dev-sonarqube.cloudkube.xyz/oauth2/callback/aad
