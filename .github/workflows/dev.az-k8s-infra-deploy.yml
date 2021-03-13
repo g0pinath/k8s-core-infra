@@ -57,7 +57,7 @@ jobs:
                         Get-AzSubscription
                         choco install terraform
                         choco install terragrunt
-                        .\az-aks\k8s-core-resourcesv2.ps1 -K8SLogMonitoringType EFKinCluster -K8SMetricsMonitoringType HAPrometheus-Thanos `
+                        .\az-aks\k8s-core-resources.ps1 -K8SLogMonitoringType EFKinCluster -K8SMetricsMonitoringType HAPrometheus-Thanos `
                         -requireDefectDojo true -requireSonarQube true -applyTFTemplates "true" `
                         -cloudProvider az -createSPNifNotExists4K8S true -dryRunforGithubActions false `
                         -requireTLSSecrets true -k8sEnvironment DEV -IngressController Nginx -Policies "DIY-GateKeeper"
