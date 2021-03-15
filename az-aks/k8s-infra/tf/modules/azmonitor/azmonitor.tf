@@ -1,38 +1,38 @@
 
-resource "azurerm_monitor_action_group" "ag" {
-  name                = "Dev-EmailActionGrp"
-  resource_group_name = data.azurerm_resource_group.rg_devops_core.name
-  short_name          = "devclemail"
+resource "azurerm_monitor_action_group" "actionggroup" {
+  name                = var.la_properties.action_group_name
+  resource_group_name = var.rg_name
+  short_name          = var.la_properties.action_group_name_short
  
  email_receiver {
-    name                    = "Dev-EmailActionGrp"
-    email_address           = var.dev_email
+    name                    = var.la_properties.email_receiver_group
+    email_address           = var.la_properties.email_receiver_address
     use_common_alert_schema = true
   }
 }
 
-resource "azurerm_log_analytics_workspace" "la" {
+resource "azurerm_log_analytics_workspace" "loganalytics" {
   
-  name                = var.dev_la_name
-  location            = data.azurerm_resource_group.rg_devops_core.location
-  resource_group_name = data.azurerm_resource_group.rg_devops_core.name
-  sku                 = "PerGB2018"
-  retention_in_days   = 30
+  name                = var.la_name
+  location            = var.location
+  resource_group_name = var.rg_name
+  sku                 = var.la_properties.la_sku
+  retention_in_days   = var.la_properties.la_retention_days
 }
 
 # Example: Alerting Action with result count trigger
 resource "azurerm_monitor_scheduled_query_rules_alert" "pods_pending" {
   
   name                = "Pods are in Pending state"
-  location            = data.azurerm_resource_group.rg_devops_core.location
-  resource_group_name = data.azurerm_resource_group.rg_devops_core.name
+  location            = var.location
+  resource_group_name = var.rg_name
 
   action {
-    action_group           = [azurerm_monitor_action_group.ag.id]
+    action_group           = [azurerm_monitor_action_group.actionggroup.id]
     email_subject          = "Pods are in Pending state"
     custom_webhook_payload = "{}"
   }
-  data_source_id = azurerm_log_analytics_workspace.la.id
+  data_source_id = azurerm_log_analytics_workspace.loganalytics.id
   description    = "Alert when total results cross threshold"
   enabled        = true
   # Count all requests with server error result code grouped into 5-minute bins

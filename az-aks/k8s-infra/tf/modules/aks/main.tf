@@ -2,8 +2,8 @@
 
 resource "azurerm_kubernetes_cluster" "aks-np" {
   name                = var.k8s_name
-  location            = data.azurerm_resource_group.rg_devops_core.location
-  resource_group_name = data.azurerm_resource_group.rg_devops_core.name
+  location            = var.aks_location
+  resource_group_name = var.aks_rg_name
   dns_prefix          = var.k8s_properties.dns_prefix
 
   default_node_pool {
@@ -37,11 +37,11 @@ resource "azurerm_kubernetes_cluster" "aks-np" {
 
   addon_profile {
     kube_dashboard {
-      enabled = true
+      enabled = var.enable_kube_dashboard
     }
     oms_agent {
       enabled = var.OMSLogging
-      log_analytics_workspace_id = azurerm_log_analytics_workspace.la.id
+      log_analytics_workspace_id = var.la_id
     }
     azure_policy {
       enabled = var.enable_azure_policy 
@@ -55,19 +55,20 @@ resource "azurerm_kubernetes_cluster" "aks-np" {
   }
 }
 
-resource "azurerm_kubernetes_cluster_node_pool" "apppools" {
-  name                  = var.k8s_properties.small_nodepool_name
+resource "azurerm_kubernetes_cluster_node_pool" "apppool01" {
+  name                  = var.k8s_properties.apppool01_name
   kubernetes_cluster_id = azurerm_kubernetes_cluster.aks-np.id
-  vm_size               = var.k8s_properties.small_pool_size
+  vm_size               = var.k8s_properties.apppool01_size
   #node_count            = 1
-  min_count       = var.k8s_properties.small_pool_min_count
-  max_count       = var.k8s_properties.small_pool_max_count
-  availability_zones = ["1", "2"]
+  min_count       = var.k8s_properties.apppool01_min_count
+  max_count       = var.k8s_properties.apppool01_max_count
+  availability_zones = var.k8s_properties.apppool01_availability_zones
+  #availability_zones = ["1", "2"]
   enable_auto_scaling = true
   max_pods    = 100
-  priority        = "Spot"
-  eviction_policy = "Delete"
-  spot_max_price  = "-1"
+  priority        = var.k8s_properties.apppool01_priority
+  eviction_policy = var.k8s_properties.apppool01_eviction_policy
+  spot_max_price  = var.k8s_properties.apppool01_spot_max_price
 
   tags = {
     Environment = "nonprod"
@@ -75,18 +76,19 @@ resource "azurerm_kubernetes_cluster_node_pool" "apppools" {
 }
 
 
-resource "azurerm_kubernetes_cluster_node_pool" "apppools-monitoring" {
-  name                  = var.k8s_properties.monitoring_nodepool_name
+resource "azurerm_kubernetes_cluster_node_pool" "monitoring_nodepool" {
+  name                  = var.k8s_properties.monitoring_pool_name
   kubernetes_cluster_id = azurerm_kubernetes_cluster.aks-np.id
   vm_size               = var.k8s_properties.monitoring_pool_size
   #node_count            = 1
   min_count       = var.k8s_properties.monitoring_pool_min_count
   max_count       = var.k8s_properties.monitoring_pool_max_count
-  availability_zones = ["1", "2"]
+  availability_zones = var.k8s_properties.monitoring_pool_availability_zones
+  #availability_zones = ["1", "2"]
   enable_auto_scaling = true
-  priority        = "Spot"
-  eviction_policy = "Delete"
-  spot_max_price  = "-1"
+  priority        = var.k8s_properties.monitoring_pool_priority
+  eviction_policy = var.k8s_properties.monitoring_pool_eviction_policy
+  spot_max_price  = var.k8s_properties.monitoring_pool_spot_max_price
   tags = {
     Environment = "nonprod"
   }

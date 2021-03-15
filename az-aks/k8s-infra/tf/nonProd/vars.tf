@@ -83,38 +83,95 @@ variable "dev_rg_group_name" {
   type = string
   default = "RG-DEV-K8S-CLUSTER"
 }
+#ACR
 variable "acr_name" {
   type = string
   default = "aksacrdev01"
 }
 
-variable "dev_la_name" {
+variable "acr_sku" {
   type = string
+  default = "Basic"
+}
+variable "la_name" {
   default = "az-aks-devsec02"
 }
 
-variable "k8s_properties" {
+variable "la_properties" {
   type = map
+  default = {
+      
+      la_sku = "PerGB2018"
+      la_retention_days = 30
+      action_group_name     = "devclemail"
+      action_group_name_short =  "devclemail"
+      email_receiver_group =  "EmailActionGrp"
+      email_receiver_address = "gopithiruvengadam@metricon.com.au"
+      
+    }
+  
+}
+
+variable "k8s_properties" {
+  type = object({
+      dns_prefix = string
+      sys_nodepool_name = string
+      sys_pool_size     = string
+      sys_pool_min_count =  number
+      sys_pool_max_count =  number
+      
+      apppool01_name = string
+      apppool01_size     = string
+      apppool01_min_count =  number
+      apppool01_max_count =  number
+      apppool01_priority  = string
+      apppool01_eviction_policy = string
+      apppool01_spot_max_price = string
+      apppool01_availability_zones = list(string)
+
+      monitoring_pool_name = string
+      monitoring_pool_size     = string
+      monitoring_pool_min_count =  number
+      monitoring_pool_max_count =  number
+      monitoring_pool_priority  = string
+      monitoring_pool_eviction_policy = string
+      monitoring_pool_spot_max_price = string
+      monitoring_pool_availability_zones = list(string)
+  })
   default = {
       
       dns_prefix = "aks-np-ae"
       sys_nodepool_name = "sysnodepool"
-      sys_pool_size     = "Standard_D2ds_v4"
+      sys_pool_size     = "Standard_B2s"
       sys_pool_min_count =  1
       sys_pool_max_count =  3
       
-      small_nodepool_name = "smallpool"
-      small_pool_size     = "Standard_D2ds_v4"
-      small_pool_min_count =  2
-      small_pool_max_count =  40
+      apppool01_name = "apppool01"
+      apppool01_size     = "Standard_D2ds_v4"
+      apppool01_min_count =  2
+      apppool01_max_count =  10
+      apppool01_priority  = "Spot"
+      apppool01_eviction_policy = "Delete"
+      apppool01_spot_max_price = "-1"
+      apppool01_availability_zones =  ["1", "2"]
+      
 
-      monitoring_nodepool_name = "monitorpool"
+      monitoring_pool_name = "monitorpool"
       monitoring_pool_size     = "Standard_D2ds_v4"
       monitoring_pool_min_count =  2
       monitoring_pool_max_count =  4
+      monitoring_pool_priority  = "Spot"
+      monitoring_pool_eviction_policy = "Delete"
+      monitoring_pool_spot_max_price = "-1"
+      monitoring_pool_availability_zones =  ["1", "2"]
+      
 
     }
   
+}
+
+variable "enable_kube_dashboard" {
+  default = true
 }
 
 variable "k8s_name" {
