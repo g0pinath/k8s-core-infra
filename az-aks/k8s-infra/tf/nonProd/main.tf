@@ -15,13 +15,12 @@ module "aks" {
 
   aks_location            = data.azurerm_resource_group.rg_devops_core.location
   aks_rg_name = data.azurerm_resource_group.rg_devops_core.name
-  k8s_name       = var.k8s_name
+  k8s_name = var.k8s_name
   k8s_properties = var.k8s_properties
+  enable_azure_policy = var.enable_azure_policy
   client_id       = var.client_id
   client_secret   = var.client_secret
   OMSLogging       = var.OMSLogging 
-  enable_azure_policy = var.enable_azure_policy
-  enable_kube_dashboard = var.enable_kube_dashboard
   la_id = "${module.azmonitor.la_id}"
   
 }
@@ -34,5 +33,15 @@ module "azmonitor" {
   la_properties = var.la_properties
   la_name = var.la_name 
 
+  
+}
+
+
+module "vnet" {
+  source = "../modules/vnet"
+
+  location            = data.azurerm_resource_group.rg_devops_core.location
+  rg_name = data.azurerm_resource_group.rg_devops_core.name
+  vnet_properties = var.vnet_properties
   
 }
