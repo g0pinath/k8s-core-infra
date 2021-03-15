@@ -1,15 +1,17 @@
-variable "acr_name" {
+
+variable "location" {
   default = ""
 }
 
-variable "acr_location" {
+variable "rg_name" {
   default = ""
 }
 
-variable "acr_rg_name" {
-  default = ""
-}
-
-variable "acr_sku" {
-  default = ""
+variable "acr_properties" {
+  type = map
+  default = {      
+      acr_name = "aksacrdev01"
+      acr_sku = "Basic"      
+    }
+  
 }

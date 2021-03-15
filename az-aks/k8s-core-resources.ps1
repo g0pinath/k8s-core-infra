@@ -579,14 +579,14 @@ Function BuildK8STFInfra($K8SMonitoringType, $k8sEnvironment, $IngressController
             terragrunt plan  --var OMSLogging=true `
                         --var client_id=$env:ARM_CLIENT_ID --var client_secret=$env:ARM_CLIENT_SECRET `
                         --var subscription_id=$env:ARM_SUBSCRIPTION_ID --var tenant_id=$env:ARM_TENANT_ID `
-                        --var dev_rg_group_name=$env:DEV_K8S_RG_NAME --var enable_azure_policy=$enable_azure_policy `
+                        --var rg_group_name=$env:DEV_K8S_RG_NAME --var enable_azure_policy=$enable_azure_policy `
                         --var IngressController=$IngressController --var requireAzureFrontDoor=$requireAzureFrontDoor `
                         --var la_name=$env:DEV_LA_NAME  --var k8s_name=$env:DEV_K8S_NAME
 
             terragrunt apply --auto-approve  --var OMSLogging=true `
                         --var client_id=$env:ARM_CLIENT_ID --var client_secret=$env:ARM_CLIENT_SECRET `
                         --var subscription_id=$env:ARM_SUBSCRIPTION_ID --var tenant_id=$env:ARM_TENANT_ID `
-                        --var dev_rg_group_name=$env:DEV_K8S_RG_NAME --var enable_azure_policy=$enable_azure_policy `
+                        --var rg_group_name=$env:DEV_K8S_RG_NAME --var enable_azure_policy=$enable_azure_policy `
                         --var IngressController=$IngressController --var requireAzureFrontDoor=$requireAzureFrontDoor  `
                         --var la_name$env:DEV_LA_NAME  --var k8s_name=$env:DEV_K8S_NAME
           }
@@ -597,14 +597,14 @@ Function BuildK8STFInfra($K8SMonitoringType, $k8sEnvironment, $IngressController
             terragrunt plan  --var OMSLogging=false `
                         --var client_id=$env:ARM_CLIENT_ID --var client_secret=$env:ARM_CLIENT_SECRET `
                         --var subscription_id=$env:ARM_SUBSCRIPTION_ID --var tenant_id=$env:ARM_TENANT_ID `
-                        --var dev_rg_group_name=$env:DEV_K8S_RG_NAME --var enable_azure_policy=$enable_azure_policy `
+                        --var rg_group_name=$env:DEV_K8S_RG_NAME --var enable_azure_policy=$enable_azure_policy `
                         --var IngressController=$IngressController --var requireAzureFrontDoor=$requireAzureFrontDoor `
                         --var la_name$env:DEV_LA_NAME  --var k8s_name=$env:DEV_K8S_NAME
             
             terragrunt apply --auto-approve  --var OMSLogging=false `
                         --var client_id=$env:ARM_CLIENT_ID --var client_secret=$env:ARM_CLIENT_SECRET `
                         --var subscription_id=$env:ARM_SUBSCRIPTION_ID --var tenant_id=$env:ARM_TENANT_ID `
-                        --var dev_rg_group_name=$env:DEV_K8S_RG_NAME --var enable_azure_policy=$enable_azure_policy `
+                        --var rg_group_name=$env:DEV_K8S_RG_NAME --var enable_azure_policy=$enable_azure_policy `
                         --var IngressController=$IngressController --var requireAzureFrontDoor=$requireAzureFrontDoor `
                         --var la_name$env:DEV_LA_NAME  --var k8s_name=$env:DEV_K8S_NAME
           }
@@ -629,7 +629,7 @@ Function BuildK8STFInfra($K8SMonitoringType, $k8sEnvironment, $IngressController
             terragrunt plan  --var OMSLogging=true `
                         --var client_id=$env:ARM_CLIENT_ID --var client_secret=$env:ARM_CLIENT_SECRET `
                         --var subscription_id=$env:ARM_SUBSCRIPTION_ID --var tenant_id=$env:ARM_TENANT_ID `
-                        --var prd_a_rg_group_name=$env:PRD_A_K8S_RG_NAME --var enable_azure_policy=$enable_azure_policy `
+                        --var rg_group_name=$env:PRD_A_K8S_RG_NAME --var enable_azure_policy=$enable_azure_policy `
                         --var IngressController=$IngressController --var requireAzureFrontDoor=$requireAzureFrontDoor `
                         --var la_name$env:PRD_A_LA_NAME  --var prd_a_k8s_name=$env:PRD_A_K8S_NAME
 
@@ -637,7 +637,7 @@ Function BuildK8STFInfra($K8SMonitoringType, $k8sEnvironment, $IngressController
             terragrunt apply --auto-approve  --var OMSLogging=true `
                         --var client_id=$env:ARM_CLIENT_ID --var client_secret=$env:ARM_CLIENT_SECRET `
                         --var subscription_id=$env:ARM_SUBSCRIPTION_ID --var tenant_id=$env:ARM_TENANT_ID `
-                        --var prd_a_rg_group_name=$env:PRD_A_K8S_RG_NAME  --var enable_azure_policy=$enable_azure_policy `
+                        --var rg_group_name=$env:PRD_A_K8S_RG_NAME  --var enable_azure_policy=$enable_azure_policy `
                         --var IngressController=$IngressController --var requireAzureFrontDoor=$requireAzureFrontDoor `
                         --var la_name$env:PRD_A_LA_NAME  --var prd_a_k8s_name=$env:PRD_A_K8S_NAME                        
           }
@@ -647,7 +647,7 @@ Function BuildK8STFInfra($K8SMonitoringType, $k8sEnvironment, $IngressController
             terragrunt plan  --var OMSLogging=false `
                         --var client_id=$env:ARM_CLIENT_ID --var client_secret=$env:ARM_CLIENT_SECRET `
                         --var subscription_id=$env:ARM_SUBSCRIPTION_ID --var tenant_id=$env:ARM_TENANT_ID `
-                        --var prd_a_rg_group_name=$env:PRD_A_K8S_RG_NAME  --var enable_azure_policy=$enable_azure_policy `
+                        --var rg_group_name=$env:PRD_A_K8S_RG_NAME  --var enable_azure_policy=$enable_azure_policy `
                         --var IngressController=$IngressController --var requireAzureFrontDoor=$requireAzureFrontDoor `
                         --var la_name$env:PRD_A_LA_NAME  --var prd_a_k8s_name=$env:PRD_A_K8S_NAME
 
@@ -655,7 +655,7 @@ Function BuildK8STFInfra($K8SMonitoringType, $k8sEnvironment, $IngressController
             terragrunt apply --auto-approve  --var OMSLogging=false `
                         --var client_id=$env:ARM_CLIENT_ID --var client_secret=$env:ARM_CLIENT_SECRET `
                         --var subscription_id=$env:ARM_SUBSCRIPTION_ID --var tenant_id=$env:ARM_TENANT_ID `
-                        --var prd_a_rg_group_name=$env:PRD_A_K8S_RG_NAME  --var enable_azure_policy=$enable_azure_policy `
+                        --var rg_group_name=$env:PRD_A_K8S_RG_NAME  --var enable_azure_policy=$enable_azure_policy `
                         --var IngressController=$IngressController --var requireAzureFrontDoor=$requireAzureFrontDoor `
                         --var la_name$env:PRD_A_LA_NAME  --var prd_a_k8s_name=$env:PRD_A_K8S_NAME
           }

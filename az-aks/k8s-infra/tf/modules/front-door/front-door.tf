@@ -1,8 +1,8 @@
 
 resource "azurerm_frontdoor" "afd-np" {
-  name                                         = var.afd_name
+  name                                         = var.afd_properties.afd_name
 #  location                                     = data.azurerm_resource_group.rg_devops_core.location
-  resource_group_name                          = data.azurerm_resource_group.rg_devops_core.name
+  resource_group_name                          = var.rg_name
   enforce_backend_pools_certificate_name_check = false
   count               = "${var.requireAzureFrontDoor == "true" ? 1 : 0}"
   routing_rule {
@@ -38,8 +38,8 @@ resource "azurerm_frontdoor" "afd-np" {
   backend_pool {
     name = "bep01"
     backend {
-      host_header = var.dd_backend_address_host_header 
-      address     = var.dd_backend_address
+      host_header = var.afd_properties.dd_backend_address_host_header 
+      address     = var.afd_properties.dd_backend_address
       #endpoint used by front door to reach the DD pod via ingress.
       http_port   = 80
       https_port  = 443
@@ -52,8 +52,8 @@ resource "azurerm_frontdoor" "afd-np" {
   backend_pool {
     name = "bep02"
     backend {
-      host_header = var.grafana_backend_address_host_header 
-      address     = var.grafana_backend_address
+      host_header = var.afd_properties.grafana_backend_address_host_header 
+      address     = var.afd_properties.grafana_backend_address
       #endpoint used by front door to reach the DD pod via ingress.
       http_port   = 80
       https_port  = 443
@@ -65,15 +65,15 @@ resource "azurerm_frontdoor" "afd-np" {
 
   frontend_endpoint {
     name                              = "fep01"
-    host_name                         =  var.afd_default_host_header
+    host_name                         =  var.afd_properties.afd_default_host_header
   }
   frontend_endpoint {
     name                              = "fep02"
-    host_name                         = var.dd_host_header
+    host_name                         = var.afd_properties.dd_host_header
   }
   frontend_endpoint {
     name                              = "fep03"
-    host_name                         = var.grafana_host_header
+    host_name                         = var.afd_properties.grafana_host_header
   }
   #Dont know why but TF keeps rearranging the order of FP and recreates it every time.
   /*
@@ -89,7 +89,7 @@ resource "azurerm_frontdoor_custom_https_configuration" "dd_https" {
   frontend_endpoint_id              = azurerm_frontdoor.afd-np[0].frontend_endpoint[1].id
   custom_https_provisioning_enabled = true
   count               = "${var.requireAzureFrontDoor == "true" ? 1 : 0}"
-  resource_group_name               = data.azurerm_resource_group.rg_devops_core.name 
+  resource_group_name               = var.rg_name
 # defaults to FrontDoor.Azure will provision the certs (the domains should be verified already in Azure)
   custom_https_configuration {
     
@@ -101,7 +101,7 @@ resource "azurerm_frontdoor_custom_https_configuration" "grafana_https" {
   frontend_endpoint_id              = azurerm_frontdoor.afd-np[0].frontend_endpoint[2].id
   custom_https_provisioning_enabled = true
   count               = "${var.requireAzureFrontDoor == "true" ? 1 : 0}"
-  resource_group_name               = data.azurerm_resource_group.rg_devops_core.name 
+  resource_group_name               = var.rg_name
 # defaults to FrontDoor.Azure will provision the certs (the domains should be verified already in Azure)
   custom_https_configuration {
     

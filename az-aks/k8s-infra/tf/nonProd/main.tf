@@ -2,12 +2,10 @@
 module "acr" {
   source = "../modules/acr"
 
-  acr_location            = data.azurerm_resource_group.rg_devops_core.location
-  acr_rg_name = data.azurerm_resource_group.rg_devops_core.name
-  acr_sku       = var.acr_sku
-  acr_name       = var.acr_name
-
-  
+  location            = data.azurerm_resource_group.rg_devops_core.location
+  rg_name = data.azurerm_resource_group.rg_devops_core.name
+  acr_properties       = var.acr_properties
+    
 }
 
 module "aks" {
