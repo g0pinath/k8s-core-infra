@@ -1,0 +1,24 @@
+{{ if eq .Release.Name .Values.deploymentName}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.deploymentName }}
+  labels:
+    app: {{ .Values.deploymentName }}
+    chart: "{{ .Values.deploymentName }}-{{ .Chart.Version }}"
+    release: "{{ .Release.Name }}"
+    heritage: "{{ .Release.Service }}"
+spec:
+  ports:
+  - port: {{ .Values.service.externalPort }}
+    protocol: TCP
+    targetPort: {{ .Values.service.internalPort }}
+  selector:
+    app: {{ .Values.deploymentName }}
+{{ if .Values.ingress.enabled }}
+  type: NodePort
+{{ else }}
+  type: ClusterIP
+{{ end }}
+{{ end }}
+---

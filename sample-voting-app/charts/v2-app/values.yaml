@@ -1,0 +1,35 @@
+replicaCount: 1
+deploymentName: v2-app
+tlsSecretName: ingress-secret-tls
+containerName: v2-app
+containerPort: 8080 # where the container is listening on.
+K8S:
+ Type: AKS #  EKS or AKS
+resourceLimits:
+  memory:
+    requests: 25Mi #minimum
+    limits: 250Mi #max
+  cpu:
+    requests: 25m #minimum
+    limits: 25m #max
+service:
+    internalPort: 8080 # where the service is listening on
+    externalPort: 8080 # rules.http.paths.backend.servicePort
+ingress:
+    enabled: true
+    ingressControllerType: nginx #choose either nginx or AGIC for AppGW ingress controller.
+    URL: devvotingapp.cloudkube.xyz
+    
+image:
+  useImagePullSecrets: false
+  repository: aksacrdev01.azurecr.io/
+  pullPolicy: Always
+#nodePoolName: smallpool 
+nodePoolName: apppool01
+buildID: '100' # This is the tag ID for the image. This value will be passed at runtime from the pipeline when helm push
+hpa:
+  dev:
+    cpuAvgUtilization: 50
+    memory_rss: 262144000
+    minReplicas: 100
+    maxReplicas: 400 # if you manually scale to a value more than this. HPA will scale it back automatically.

@@ -1,0 +1,40 @@
+{{ if .Values.ingress.enabled }}
+{{ if eq .Release.Name .Values.deploymentName}}
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: {{ .Values.deploymentName }}
+  annotations:
+    kubernetes.io/ingress.class: azure/application-gateway    
+spec:
+  rules:
+  - host: {{ .Values.ingress.URL }}
+    http:
+      paths:
+      - backend:
+          serviceName: {{ .Values.deploymentName }}
+          servicePort: 80  
+{{ end }}
+{{ end }}      
+---
+{{ if .Values.ingress.enabled }}
+{{ if .Values.pilotRequired }}
+{{ if eq .Release.Name .Values.pilotdeploymentName}}
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: {{ .Values.pilotdeploymentName }}
+  annotations:
+    kubernetes.io/ingress.class: azure/application-gateway    
+spec:
+  rules:
+  - host: {{ .Values.ingress.pilotURL }}
+    http:
+      paths:
+      - backend:
+          serviceName: {{ .Values.pilotdeploymentName }}
+          servicePort: 80          
+{{ end }}
+{{ end }}
+{{ end }}
+---

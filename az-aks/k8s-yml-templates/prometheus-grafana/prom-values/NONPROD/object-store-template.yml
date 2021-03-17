@@ -1,6 +1,6 @@
 type: AZURE
 config:
-  storage_account: "azaks2021devtf01"
+  storage_account: ""
   #Replace your storage account
   storage_account_key: '' #script gets the KEY and replaces via helm.
   container: "thanos"

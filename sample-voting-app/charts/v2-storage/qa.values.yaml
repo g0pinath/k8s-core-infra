@@ -1,0 +1,35 @@
+replicaCount: 1
+serviceName: voting-storage
+deploymentName: v2-storage
+containerName: v2-storage
+containerPort: 3306
+K8S:
+ Type: AKS #  EKS or AKS
+resourceLimits:
+  memory:
+    requests: 150Mi #minimum
+    limits: 250Mi #max
+  cpu:
+    requests: 5m #minimum
+    limits: 250m #max
+service: 
+  externalPort1: 6379 
+  internalPort1: 6379
+  externalPort2: 3306
+  internalPort2: 3306
+ingress:
+    enabled: false
+    #URL: voting-app-v1.az.k8s
+    #pilotURL: voting-app-v2.az.k8s
+image:
+  useImagePullSecrets: false
+  repository: azaksdev001.azurecr.io/
+  pullPolicy: Always
+
+#nodePoolName: smallpool
+nodePoolName: agentpool
+buildID: '100' # This is the tag ID for the image. This value will be passed at runtime from the pipeline when helm push
+hpa:
+  dev:
+    minReplicas: 1
+    maxReplicas: 1

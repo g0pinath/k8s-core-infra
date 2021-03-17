@@ -588,7 +588,7 @@ Function BuildK8STFInfra($K8SMonitoringType, $k8sEnvironment, $IngressController
                         --var subscription_id=$env:ARM_SUBSCRIPTION_ID --var tenant_id=$env:ARM_TENANT_ID `
                         --var rg_group_name=$env:DEV_K8S_RG_NAME --var enable_azure_policy=$enable_azure_policy `
                         --var IngressController=$IngressController --var requireAzureFrontDoor=$requireAzureFrontDoor  `
-                        --var la_name$env:DEV_LA_NAME  --var k8s_name=$env:DEV_K8S_NAME
+                        --var la_name=$env:DEV_LA_NAME  --var k8s_name=$env:DEV_K8S_NAME
           }
           else 
           {
@@ -599,14 +599,14 @@ Function BuildK8STFInfra($K8SMonitoringType, $k8sEnvironment, $IngressController
                         --var subscription_id=$env:ARM_SUBSCRIPTION_ID --var tenant_id=$env:ARM_TENANT_ID `
                         --var rg_group_name=$env:DEV_K8S_RG_NAME --var enable_azure_policy=$enable_azure_policy `
                         --var IngressController=$IngressController --var requireAzureFrontDoor=$requireAzureFrontDoor `
-                        --var la_name$env:DEV_LA_NAME  --var k8s_name=$env:DEV_K8S_NAME
+                        --var la_name=$env:DEV_LA_NAME  --var k8s_name=$env:DEV_K8S_NAME
             
             terragrunt apply --auto-approve  --var OMSLogging=false `
                         --var client_id=$env:ARM_CLIENT_ID --var client_secret=$env:ARM_CLIENT_SECRET `
                         --var subscription_id=$env:ARM_SUBSCRIPTION_ID --var tenant_id=$env:ARM_TENANT_ID `
                         --var rg_group_name=$env:DEV_K8S_RG_NAME --var enable_azure_policy=$enable_azure_policy `
                         --var IngressController=$IngressController --var requireAzureFrontDoor=$requireAzureFrontDoor `
-                        --var la_name$env:DEV_LA_NAME  --var k8s_name=$env:DEV_K8S_NAME
+                        --var la_name=$env:DEV_LA_NAME  --var k8s_name=$env:DEV_K8S_NAME
           }
     }
     "PRD-A"
@@ -631,7 +631,7 @@ Function BuildK8STFInfra($K8SMonitoringType, $k8sEnvironment, $IngressController
                         --var subscription_id=$env:ARM_SUBSCRIPTION_ID --var tenant_id=$env:ARM_TENANT_ID `
                         --var rg_group_name=$env:PRD_A_K8S_RG_NAME --var enable_azure_policy=$enable_azure_policy `
                         --var IngressController=$IngressController --var requireAzureFrontDoor=$requireAzureFrontDoor `
-                        --var la_name$env:PRD_A_LA_NAME  --var prd_a_k8s_name=$env:PRD_A_K8S_NAME
+                        --var la_name=$env:PRD_A_LA_NAME  --var prd_a_k8s_name=$env:PRD_A_K8S_NAME
 
             
             terragrunt apply --auto-approve  --var OMSLogging=true `
@@ -639,7 +639,7 @@ Function BuildK8STFInfra($K8SMonitoringType, $k8sEnvironment, $IngressController
                         --var subscription_id=$env:ARM_SUBSCRIPTION_ID --var tenant_id=$env:ARM_TENANT_ID `
                         --var rg_group_name=$env:PRD_A_K8S_RG_NAME  --var enable_azure_policy=$enable_azure_policy `
                         --var IngressController=$IngressController --var requireAzureFrontDoor=$requireAzureFrontDoor `
-                        --var la_name$env:PRD_A_LA_NAME  --var prd_a_k8s_name=$env:PRD_A_K8S_NAME                        
+                        --var la_name=$env:PRD_A_LA_NAME  --var prd_a_k8s_name=$env:PRD_A_K8S_NAME                        
           }
           else 
           {
@@ -649,7 +649,7 @@ Function BuildK8STFInfra($K8SMonitoringType, $k8sEnvironment, $IngressController
                         --var subscription_id=$env:ARM_SUBSCRIPTION_ID --var tenant_id=$env:ARM_TENANT_ID `
                         --var rg_group_name=$env:PRD_A_K8S_RG_NAME  --var enable_azure_policy=$enable_azure_policy `
                         --var IngressController=$IngressController --var requireAzureFrontDoor=$requireAzureFrontDoor `
-                        --var la_name$env:PRD_A_LA_NAME  --var prd_a_k8s_name=$env:PRD_A_K8S_NAME
+                        --var la_name=$env:PRD_A_LA_NAME  --var prd_a_k8s_name=$env:PRD_A_K8S_NAME
 
             
             terragrunt apply --auto-approve  --var OMSLogging=false `
@@ -657,7 +657,7 @@ Function BuildK8STFInfra($K8SMonitoringType, $k8sEnvironment, $IngressController
                         --var subscription_id=$env:ARM_SUBSCRIPTION_ID --var tenant_id=$env:ARM_TENANT_ID `
                         --var rg_group_name=$env:PRD_A_K8S_RG_NAME  --var enable_azure_policy=$enable_azure_policy `
                         --var IngressController=$IngressController --var requireAzureFrontDoor=$requireAzureFrontDoor `
-                        --var la_name$env:PRD_A_LA_NAME  --var prd_a_k8s_name=$env:PRD_A_K8S_NAME
+                        --var la_name=$env:PRD_A_LA_NAME  --var prd_a_k8s_name=$env:PRD_A_K8S_NAME
           }
   
     }
@@ -957,10 +957,22 @@ Function SetupK8SMetricsMonitoring($K8SMetricsMonitoringType, $K8SLogMonitoringT
           
         #THANOS_LTR_SAKEY is a secret stored in Git. This is the storage account key in Azure for THanos LTR
         $yml = get-content "$pwd/az-aks/k8s-yml-templates/prometheus-grafana/prom-values/$FolderName/object-store-template.yml" | ConvertFrom-Yaml
-        $yml.config.storage_account_key = $env:THANOS_LTR_SAKEY
+        if($FolderName -eq "NONPROD")
+        {
+          $yml.config.storage_account_key = (Get-AzStorageAccountKey -ResourceGroupName $env:DEV_K8S_RG_NAME -AccountName $env:DEV_TF_STORAGE_NAME | select value).value[0]
+          $yml.config.storage_account = $env:DEV_TF_STORAGE_NAME          
+        }elseif($FolderName -eq "PRD-A")
+        {
+          $yml.config.storage_account_key = (Get-AzStorageAccountKey -ResourceGroupName $env:PRD_A_K8S_RG_NAME -AccountName $env:PRD_A_TF_STORAGE_NAME | select value).value[0]
+          $yml.config.storage_account = $env:PRD_A_TF_STORAGE_NAME   
+        }else {
+          $yml.config.storage_account_key = (Get-AzStorageAccountKey -ResourceGroupName $env:PRD_B_K8S_RG_NAME -AccountName $env:PRD_B_TF_STORAGE_NAME | select value).value[0]
+          $yml.config.storage_account = $env:PRD_B_TF_STORAGE_NAME   
+        }
+        
         $yml=$yml | ConvertTo-Yaml
         $yml | out-file "$pwd/az-aks/k8s-yml-templates/prometheus-grafana/prom-values/$FolderName/object-store.yml"
-        write-host "==SetupK8SMetricsMonitoring====>"$env:GRAFANA_INI_URL
+      
         IF($k8sEnvironment -EQ "DEV")
         {
           $env:K8S_SLACK_NOTIFICATIONS_URL=$env:DEV_K8S_SLACK_NOTIFICATIONS_URL
@@ -976,6 +988,7 @@ Function SetupK8SMetricsMonitoring($K8SMetricsMonitoringType, $K8SLogMonitoringT
 
         }
         else {
+          
           $env:K8S_SLACK_NOTIFICATIONS_URL=$env:PRD_K8S_SLACK_NOTIFICATIONS_URL
           $GRAFANA_URL = $env:PRD_GRAFANA_LOGIN_URL
           $Secret = get-AzKeyVaultSecret -VaultName $env:PRD_K8S_KV_NAME -Name "PRD-GRAFANA-CLIENT-SECRET" 
@@ -985,7 +998,7 @@ Function SetupK8SMetricsMonitoring($K8SMetricsMonitoringType, $K8SLogMonitoringT
           $Secret = get-AzKeyVaultSecret -VaultName $env:PRD_K8S_KV_NAME -Name "PRD-GRAFANA-CLIENT-ID" 
           $ssPtr = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($secret.SecretValue)
           $ENV:GRAFANA_CLIENT_ID = [System.Runtime.InteropServices.Marshal]::PtrToStringBSTR($ssPtr)
-        
+          
         }
       #Most popular image https://hub.docker.com/r/fluent/fluentd-kubernetes-daemonset/tags?page=1&ordering=last_updated -- 100M pulls
       switch($K8SMetricsMonitoringType)
@@ -1018,7 +1031,7 @@ Function SetupK8SMetricsMonitoring($K8SMetricsMonitoringType, $K8SLogMonitoringT
          -f ./az-aks/k8s-yml-templates/prometheus-grafana/grafana-values/$FolderName/values.yml  `
          --set grafana\.ini.auth\.azuread.client_id="$ENV:GRAFANA_CLIENT_ID"   `
          --set adminPassword="$env:GRAFANA_ADMIN_PASSWORD" `
-         --set grafana\.ini.server.root_url="$GRAFANA_INI_URL" `
+         --set grafana\.ini.server.root_url="$GRAFANA_URL" `
          --set grafana\.ini.auth\.azuread.auth_url="https://login.microsoftonline.com/$env:ARM_TENANT_ID/oauth2/v2.0/authorize"   `
           --set grafana\.ini.auth\.azuread.token_url="https://login.microsoftonline.com/$env:ARM_TENANT_ID/oauth2/v2.0/token"   `
          --set grafana\.ini.auth\.azuread.client_secret="$ENV:GRAFANA_CLIENT_SECRET" -n monitoring   #persistent is disabled by default.
@@ -1197,6 +1210,23 @@ if($k8sEnvironment -eq "DEV")
     }
   }
 
+Function DeploySampleVotingApp($k8sEnvironment)
+{
+  if($k8sEnvironment -eq "DEV")
+  {
+    $Acr_name = (Get-AzContainerRegistry -ResourceGroupName $env:DEV_K8S_RG_NAME | Select Name).Name
+    kubectl apply -f .\az-aks\k8s-yml-templates\voting-app-prereq\NONPROD\secret.yml -n dev
+  }
+  else
+  {
+    $Acr_name = (Get-AzContainerRegistry -ResourceGroupName $env:PRD_A_K8S_RG_NAME | Select Name).Name
+    kubectl apply -f az-aks\k8s-yml-templates\voting-app-prereq\PROD\secret.yml -n prod
+  }
+  
+  helm upgrade --install v2-app .\sample-voting-app\charts\v2-app\. -n dev --set buildID=100
+  helm upgrade --install v2-analytics .\sample-voting-app\charts\v2-analytics\. -n dev --set buildID=100
+  helm upgrade --install v2-storage .\sample-voting-app\charts\v2-storage\. -n dev --set buildID=100 
+}
 Function ApplyK8SAddonResourceTemplates($FolderName, $IngressController, $serviceMeshType, $requireDefectDojo, $k8sEnvironment, $K8SLogMonitoringType, $cloudProvider, $DEFAULT_PRD_URL_SUFFIX )
 {
     
@@ -1217,8 +1247,10 @@ Function ApplyK8SAddonResourceTemplates($FolderName, $IngressController, $servic
     #Log monitoring
     SetupK8SLogging $K8SLogMonitoringType $cloudProvider #only for logs
     #Metrics monitoring -- send folder name containing the values
+    #Sample Voting App
+    DeploySampleVotingApp $k8sEnvironment
     
-    SetupK8SMetricsMonitoring $K8SMetricsMonitoringType $K8SLogMonitoringType $k8sEnvironment $FolderName
+    SetupK8SMetricsMonitoring $K8SMetricsMonitoringType $K8SLogMonitoringType $k8sEnvironment $FolderName 
     if($requireSonarQube -eq "true")
     {
       InstallSonarQube 

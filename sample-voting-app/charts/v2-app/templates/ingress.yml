@@ -1,0 +1,29 @@
+{{ if .Values.ingress.enabled }}
+{{ if or (eq .Values.ingress.ingressControllerType "HAProxy") (eq .Values.ingress.ingressControllerType "nginx") }}
+apiVersion: networking.k8s.io/v1beta1 #change to v1 from k8s 1.19
+{{ end }}
+{{ if eq .Values.ingress.ingressControllerType "agic" }}
+apiVersion: extensions/v1beta1
+{{ end }}
+kind: Ingress
+metadata:
+  name: {{ .Values.deploymentName }}
+{{ if eq .Values.ingress.ingressControllerType "nginx" }}
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+{{ end }}   
+spec:
+  tls:
+    - hosts:
+      - {{ .Values.ingress.URL }}
+      secretName: {{ .Values.tlsSecretName }}
+  rules:
+  - host: {{ .Values.ingress.URL }}
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: {{ .Values.deploymentName }}
+          servicePort: {{ .Values.service.externalPort }}
+{{ end }}      
+---

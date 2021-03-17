@@ -141,23 +141,23 @@ variable "k8s_properties" {
       dns_prefix = "aks-np-ae"
       enable_kube_dashboard = true
       sys_nodepool_name = "sysnodepool"
-      sys_pool_size     = "Standard_B2s"
+      sys_pool_size     = "Standard_A2m_v2"
       sys_pool_min_count =  1
       sys_pool_max_count =  3
       
       apppool01_name = "apppool01"
-      apppool01_size     = "Standard_B2ms"
+      apppool01_size     = "Standard_A2m_v2"
       apppool01_min_count =  1
       apppool01_max_count =  4
       apppool01_priority  = "Spot"
       apppool01_eviction_policy = "Delete"
       apppool01_spot_max_price = "-1"
       apppool01_availability_zones =  ["1", "2"]
-      apppool01_max_pods = 100
+      apppool01_max_pods = 250
       apppool01_is_spot = false     
 
       monitoring_pool_name = "monitorpool"
-      monitoring_pool_size     = "Standard_B2ms"
+      monitoring_pool_size     = "Standard_A2m_v2"
       monitoring_pool_min_count =  1
       monitoring_pool_max_count =  2
       monitoring_pool_priority  = "Spot"

@@ -1,0 +1,28 @@
+replicaCount: 1
+deploymentName: v2-analytics
+containerName: v2-analytics
+K8S:
+ Type: AKS #  EKS or AKS
+resourceLimits:
+  memory:
+    requests: 5Mi #minimum
+    limits: 250Mi #max
+  cpu:
+    requests: 25m #minimum
+    limits: 100m #max
+service:
+    internalPort: 8080 #same as container port
+    externalPort: 8080
+ingress:
+    enabled: false
+image:
+  useImagePullSecrets: false
+  repository: aksacrdev01.azurecr.io/
+  pullPolicy: Always
+#nodePoolName: smallpool 
+nodePoolName: apppool01      #for EKS - eks.amazonaws.com/nodegroup: devsecops-pool
+buildID: '100' # This is the tag ID for the image. This value will be passed at runtime from the pipeline when helm push
+hpa:
+  dev:
+    minReplicas: 1
+    maxReplicas: 4

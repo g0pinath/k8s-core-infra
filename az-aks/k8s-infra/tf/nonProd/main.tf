@@ -43,3 +43,13 @@ module "vnet" {
   vnet_properties = var.vnet_properties
   
 }
+
+module "front-door" {
+  source = "../modules/front-door"
+
+  location            = data.azurerm_resource_group.rg_devops_core.location
+  rg_name = data.azurerm_resource_group.rg_devops_core.name
+  afd_properties = var.afd_properties
+  requireAzureFrontDoor = var.requireAzureFrontDoor
+  
+}

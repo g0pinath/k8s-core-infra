@@ -1,0 +1,124 @@
+{{ if eq .Release.Name .Values.deploymentName}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.deploymentName }}  
+  labels:
+    app: {{ .Values.deploymentName }}
+    chart: "{{ .Values.deploymentName }}-{{ .Chart.Version | replace "+" "_" }}"
+    release: "{{ .Release.Name }}"
+    heritage: "{{ .Release.Service }}"
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Values.deploymentName }}
+  template:
+    metadata:
+      annotations: 
+      {{ if (eq .Values.K8S.Type "AKS")  }}
+        container.apparmor.security.beta.kubernetes.io/v2-analytics: runtime/default
+        seccomp.security.alpha.kubernetes.io/defaultProfileName: runtime/default
+      {{ end }}
+        linkerd.io/inject: enabled
+      #https://kubernetes.io/docs/tutorials/clusters/apparmor/
+      #EKS is having issues as it doesnt set app armor by default
+      labels:
+        app: {{ .Values.deploymentName }}
+        chart: "{{ .Values.deploymentName }}-{{ .Chart.Version | replace "+" "_" }}"
+        release: "{{ .Release.Name }}"
+        heritage: "{{ .Release.Service }}"
+    spec:
+      automountServiceAccountToken: true #linkerd needs this enabled for mTLS    
+      nodeSelector:
+      {{ if (eq .Values.K8S.Type "AKS")  }}
+        agentpool: {{ .Values.nodePoolName }} 
+      {{ end }}
+      #for AKS, this has to be agentpool -- k get nodes --show-labels to see actual cloud provider values
+      {{ if (eq .Values.K8S.Type "EKS")  }}
+        eks.amazonaws.com/nodegroup: {{ .Values.nodePoolName }} 
+      imagePullSecrets:
+        - name: acr-secret
+      {{ end }}
+      #for EKS, this has to be eks.amazonaws.com/nodegroup -- k get nodes --show-labels to see actual cloud provider values
+      tolerations:
+      - key: "kubernetes.azure.com/scalesetpriority"
+        value: "spot"
+        operator: "Equal"
+        effect: "NoSchedule"      
+      containers:
+      - name: {{ .Values.deploymentName }}
+        image: "{{ .Values.image.repository }}{{ .Values.deploymentName }}:{{ .Values.buildID }}"
+        securityContext:
+          privileged: false
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        securityContext:
+          runAsUser: 1000
+          runAsGroup: 3000
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          runAsUser: 2102
+          privileged: false
+          readOnlyRootFilesystem: true
+        resources:
+          limits:
+            memory: {{ .Values.resourceLimits.memory.limits }}
+            cpu: {{ .Values.resourceLimits.cpu.limits }}
+          requests:
+            memory: {{ .Values.resourceLimits.memory.requests }}
+            cpu: {{ .Values.resourceLimits.cpu.requests }}
+        ports:
+          - containerPort: {{ .Values.service.internalPort }}
+            name: http
+        env:
+        - name: MYSQL_HOST
+          value: "voting-storage"
+        - name: MYSQL_USER
+          valueFrom:
+            secretKeyRef:
+              name: voting-storage-secret
+              key: MYSQL_USER
+        - name: MYSQL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: voting-storage-secret
+              key: MYSQL_PASSWORD
+        - name: MYSQL_DATABASE
+          valueFrom:
+            secretKeyRef:
+              name: voting-storage-secret
+              key: MYSQL_DATABASE
+{{ end }}
+#---
+#apiVersion: autoscaling/v1
+#kind: HorizontalPodAutoscaler
+#metadata:
+#  name: {{ .Values.deploymentName }}-hpa
+#spec:
+#  maxReplicas: {{ .Values.hpa.dev.maxReplicas }} # define max replica count
+#  minReplicas: {{ .Values.hpa.dev.minReplicas }}  # define min replica count -- max 20 with 2 nodes b2stype
+#  scaleTargetRef:
+#    apiVersion: apps/v1
+#    kind: Deployment
+#    name: {{ .Values.deploymentName }}
+#  targetCPUUtilizationPercentage: 50 # target CPU utilization
+---
+apiVersion: autoscaling/v2beta2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ .Values.deploymentName }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ .Values.deploymentName }}
+  maxReplicas: {{ .Values.hpa.dev.maxReplicas }} # define max replica count
+  minReplicas: {{ .Values.hpa.dev.minReplicas }}  # define min replica count -- max 20 with 2 nodes b2stype
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 50
+---     
