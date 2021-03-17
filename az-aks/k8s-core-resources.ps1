@@ -942,7 +942,7 @@ Function SetupK8SLogging($K8SLogMonitoringType, $cloudProvider)
         "Loki"
         {
         
-            helm upgrade --install loki --namespace=monitoring grafana/loki --set grafana.enabled=false `
+            helm upgrade --install loki --namespace=monitoring grafana/loki-stack --set grafana.enabled=false `
             --set prometheus.enabled=false `
             --set loki.persistence.enabled=true `
             --set loki.persistence.storageClassName="default" `
