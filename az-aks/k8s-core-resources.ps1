@@ -1056,6 +1056,7 @@ Function SetupK8SMetricsMonitoring($K8SMetricsMonitoringType, $K8SLogMonitoringT
           -f ./az-aks/k8s-yml-templates/prometheus-grafana/prom-values/$FolderName/prometheus-thanos-values.yml `
           --set prometheusOperator.tlsProxy.enabled=false `
           --set alertmanager.config.global.smtp_auth_password=$env:smtp_auth_password `
+          --set alertmanager.config.global.slack_api_url=$env:K8S_SLACK_NOTIFICATIONS_URL `
           --set prometheus.prometheusSpec.replicas=2 -n monitoring 
          #https://github.com/helm/charts/issues/18765 --WIP Azure AD authentication ------
          #DONT use double quotes in PS 
