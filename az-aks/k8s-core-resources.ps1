@@ -1,5 +1,5 @@
 Param(
-  [ValidateSet("OMS","EFKinCluster", "ElasticInCloud",  "None")]
+  [ValidateSet("OMS","EFKinCluster", "ElasticInCloud", "Loki", "None")]
         [String]
         $K8SLogMonitoringType,
   [ValidateSet("OMS", "HAPrometheus-Thanos",  "SingleInstancePrometheus", "None")]
@@ -914,7 +914,7 @@ Function InstallDefectDojo($k8sEnvironment, $FolderName, $cloudProvider, $DEFAUL
 Function SetupK8SLogging($K8SLogMonitoringType, $cloudProvider)
 {
       #Most popular image https://hub.docker.com/r/fluent/fluentd-kubernetes-daemonset/tags?page=1&ordering=last_updated -- 100M pulls
-      switch($K8SMonitoringType)
+      switch($K8SLogMonitoringType)
       {
         "EFKinCluster"
         {

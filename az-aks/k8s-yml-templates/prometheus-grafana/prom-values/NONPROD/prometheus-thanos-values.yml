@@ -79,6 +79,14 @@
   additionalPrometheusRulesMap: 
     rule-name:
       groups:
+      - name: loki_kube_system_errors
+        rules:
+        - alert: logs_error_count_kube_system
+          expr: rate({namespace="kube-system"} |~ "[Ee]rror"[5m]) > 5
+          for: 1m
+          labels:
+            severity: P4
+            Source: Loki  
       - name: custom_alerts_group
         rules:
         - alert: KubeDeploymentReplicasMismatch1m
