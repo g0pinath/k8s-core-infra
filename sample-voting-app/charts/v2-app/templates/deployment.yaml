@@ -17,6 +17,8 @@ spec:
     metadata:
       annotations: 
         linkerd.io/inject: enabled
+        prometheus.io/scrape: {{ .Values.prometheus.scrapping }}
+
       {{ if eq .Values.K8S.Type "AKS" }}
         container.apparmor.security.beta.kubernetes.io/v2-app: runtime/default
         seccomp.security.alpha.kubernetes.io/defaultProfileName: runtime/default

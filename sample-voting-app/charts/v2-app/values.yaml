@@ -3,6 +3,8 @@ deploymentName: v2-app
 tlsSecretName: ingress-secret-tls
 containerName: v2-app
 containerPort: 8080 # where the container is listening on.
+prometheus:
+ scrapping: "'false'"
 K8S:
  Type: AKS #  EKS or AKS
 resourceLimits:
@@ -31,5 +33,5 @@ hpa:
   dev:
     cpuAvgUtilization: 50
     memory_rss: 262144000
-    minReplicas: 100
-    maxReplicas: 400 # if you manually scale to a value more than this. HPA will scale it back automatically.
+    minReplicas: 2
+    maxReplicas: 4 # if you manually scale to a value more than this. HPA will scale it back automatically.

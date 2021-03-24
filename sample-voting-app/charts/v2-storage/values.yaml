@@ -3,6 +3,8 @@ serviceName: voting-storage
 deploymentName: v2-storage
 containerName: v2-storage
 containerPort: 3306
+prometheus:
+ scrapping: "'false'"
 K8S:
  Type: AKS #  EKS or AKS
 resourceLimits:

@@ -79,14 +79,11 @@
   additionalPrometheusRulesMap: 
     rule-name:
       groups:
-      - name: loki_kube_system_errors
+      - name: rate-alerting
         rules:
-        - alert: logs_error_count_kube_system
-          expr: rate({namespace="kube-system"} |~ "[Ee]rror"[5m]) > 5
-          for: 1m
-          labels:
-            severity: P4
-            Source: Loki  
+        - alert: HighLogRate
+          expr: sum by(container) (rate({job=~"loki/.*"}[1m]))  > 1
+          for: 1m 
       - name: custom_alerts_group
         rules:
         - alert: KubeDeploymentReplicasMismatch1m

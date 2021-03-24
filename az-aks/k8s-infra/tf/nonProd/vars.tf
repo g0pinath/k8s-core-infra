@@ -158,7 +158,7 @@ variable "k8s_properties" {
 
       monitoring_pool_name = "monitorpool"
       monitoring_pool_size     = "Standard_A2m_v2"
-      monitoring_pool_min_count =  1
+      monitoring_pool_min_count =  2
       monitoring_pool_max_count =  2
       monitoring_pool_priority  = "Spot"
       monitoring_pool_eviction_policy = "Delete"
@@ -169,7 +169,7 @@ variable "k8s_properties" {
       
 
     }
-  
+  #MSDN subscriptions dont support spot instances, so be sure to set monitoring_pool_is_spot as false for MSDN subscriptions
 }
 
 variable "vnet_properties" {

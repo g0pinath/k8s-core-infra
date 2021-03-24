@@ -1,6 +1,8 @@
 replicaCount: 1
 deploymentName: v2-analytics
 containerName: v2-analytics
+prometheus:
+ scrapping: "'false'"
 K8S:
  Type: AKS #  EKS or AKS
 resourceLimits:

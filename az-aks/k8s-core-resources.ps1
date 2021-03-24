@@ -1,5 +1,5 @@
 Param(
-  [ValidateSet("OMS","EFKinCluster", "ElasticInCloud", "Loki", "None")]
+  [ValidateSet("OMS","EFKinCluster", "ElasticInCloud",  "FluentBitAzLogAnalytics", "None")]
         [String]
         $K8SLogMonitoringType,
   [ValidateSet("OMS", "HAPrometheus-Thanos",  "SingleInstancePrometheus", "None")]
@@ -911,7 +911,7 @@ Function InstallDefectDojo($k8sEnvironment, $FolderName, $cloudProvider, $DEFAUL
   
 }
 
-Function SetupK8SLogging($K8SLogMonitoringType, $cloudProvider)
+Function SetupK8SLogging($K8SLogMonitoringType, $cloudProvider, $K8S_RG_NAME)
 {
       #Most popular image https://hub.docker.com/r/fluent/fluentd-kubernetes-daemonset/tags?page=1&ordering=last_updated -- 100M pulls
       switch($K8SLogMonitoringType)
@@ -939,15 +939,12 @@ Function SetupK8SLogging($K8SLogMonitoringType, $cloudProvider)
         {
             kubectl apply -f .\k8s-yml-templates\efk-logging\$K8SLogMonitoringType\fluent\.
         }
-        "Loki"
+        "FluentBitAzLogAnalytics"
         {
-        
-            helm upgrade --install loki --namespace=monitoring grafana/loki-stack --set grafana.enabled=false `
-            --set prometheus.enabled=false `
-            --set loki.persistence.enabled=true `
-            --set loki.persistence.storageClassName="default" `
-            --set loki.persistence.size=5Gi -n monitoring
-            #Loki + Promtail
+          $la_id = (az monitor log-analytics workspace list -g $K8S_RG_NAME | Convertfrom-Json | select customerid).customerid
+          $la_key = (az monitor log-analytics workspace get-shared-keys --resource-group  $K8S_RG_NAME  -n $LA_NAME | ConvertFrom-Json | SELECT primarySharedKey).primarySharedKey
+          kubectl create secret generic loganalytics -n monitoring --from-literal=WorkSpaceID=$la_id --from-literal=WorkspaceKey=$la_key
+          kubectl apply -f .\az-aks\k8s-yml-templates\fluentbitAzLogAnalytics\. -n monitoring
         }
       }
 }
@@ -1039,6 +1036,13 @@ Function SetupK8SMetricsMonitoring($K8SMetricsMonitoringType, $K8SLogMonitoringT
           #----TSONLY----#remove-item $pwd/az-aks/k8s-yml-templates/prometheus-grafana/prom-values/$FolderName/object-store.yml -force    
           helm upgrade --install prometheus-adapter prometheus-community/prometheus-adapter `
           -f .\az-aks\k8s-yml-templates\prometheus-grafana\prom-values\$FolderName\prom-adapter-values.yml -n monitoring
+
+          helm upgrade --install loki --namespace=monitoring grafana/loki-stack --set grafana.enabled=false `
+            --set prometheus.enabled=false `
+            --set loki.persistence.enabled=true `
+            --set loki.persistence.storageClassName="default" `
+            --set loki.persistence.size=5Gi -n monitoring -f .\az-aks\k8s-yml-templates\prometheus-grafana\loki-values\loki-config.yml
+            #Loki + Promtail
         }
         "HAPrometheus-Thanos"
         {
@@ -1074,6 +1078,12 @@ Function SetupK8SMetricsMonitoring($K8SMetricsMonitoringType, $K8SLogMonitoringT
           helm upgrade --install prometheus-adapter prometheus-community/prometheus-adapter `
           -f .\az-aks\k8s-yml-templates\prometheus-grafana\prom-values\$FolderName\prom-adapter-values.yml -n monitoring
 #if the cluster is too big and you want to send metrics of only certain apps based on labels - podMonitorSelector, serviceMonitorSelector
+          helm upgrade --install loki --namespace=monitoring grafana/loki-stack --set grafana.enabled=false `
+          --set prometheus.enabled=false `
+          --set loki.persistence.enabled=true `
+          --set loki.persistence.storageClassName="default" `
+          --set loki.persistence.size=5Gi -n monitoring -f .\az-aks\k8s-yml-templates\prometheus-grafana\loki-values\loki-config.yml
+          #Loki + Promtail
         }
         "None"
         {
@@ -1228,7 +1238,8 @@ Function DeploySampleVotingApp($k8sEnvironment)
   helm upgrade --install v2-analytics .\sample-voting-app\charts\v2-analytics\. -n dev --set buildID=100
   helm upgrade --install v2-storage .\sample-voting-app\charts\v2-storage\. -n dev --set buildID=100 
 }
-Function ApplyK8SAddonResourceTemplates($FolderName, $IngressController, $serviceMeshType, $requireDefectDojo, $k8sEnvironment, $K8SLogMonitoringType, $cloudProvider, $DEFAULT_PRD_URL_SUFFIX )
+Function ApplyK8SAddonResourceTemplates($FolderName, $IngressController, $serviceMeshType, $requireDefectDojo, $k8sEnvironment, $K8SLogMonitoringType, 
+$cloudProvider, $DEFAULT_PRD_URL_SUFFIX, $K8S_RG_NAME, $LA_NAME)
 {
     
     
@@ -1246,7 +1257,7 @@ Function ApplyK8SAddonResourceTemplates($FolderName, $IngressController, $servic
       InstallDefectDojo $k8sEnvironment $FolderName $cloudProvider $DEFAULT_PRD_URL_SUFFIX #foldername is used for DD URL construction.
     }
     #Log monitoring
-    SetupK8SLogging $K8SLogMonitoringType $cloudProvider #only for logs
+    SetupK8SLogging $K8SLogMonitoringType $cloudProvider $K8S_RG_NAME $LA_NAME #only for logs
     #Metrics monitoring -- send folder name containing the values
     #Sample Voting App
     DeploySampleVotingApp $k8sEnvironment
@@ -1279,7 +1290,8 @@ if($dryRunforGithubActions -eq "false")
     LogintoK8S $ENV:ARM_SUBSCRIPTION_ID $ENV:DEV_K8S_NAME $ENV:ARM_CLIENT_ID $ENV:ARM_CLIENT_SECRET $ENV:DEV_K8S_RG_NAME
     ApplyK8SCoreTemplates $k8sEnvironment $Policies
     $FolderName="NONPROD"
-    ApplyK8SAddonResourceTemplates $FolderName $IngressController $serviceMeshType $requireDefectDojo $k8sEnvironment $K8SLogMonitoringType $cloudProvider $DEFAULT_DEV_URL_SUFFIX
+    ApplyK8SAddonResourceTemplates $FolderName $IngressController $serviceMeshType $requireDefectDojo $k8sEnvironment $K8SLogMonitoringType $cloudProvider `
+    $DEFAULT_DEV_URL_SUFFIX $ENV:DEV_K8S_RG_NAME $env:DEV_LA_NAME
     
     
   }elseif($productionClusterConfigType -EQ "PrimaryRegionOnly")
@@ -1288,7 +1300,8 @@ if($dryRunforGithubActions -eq "false")
     LogintoK8S $ENV:ARM_SUBSCRIPTION_ID $ENV:PRD_A_K8S_NAME $ENV:ARM_CLIENT_ID $ENV:ARM_CLIENT_SECRET $ENV:PRD_A_K8S_RG_NAME
     ApplyK8SCoreTemplates "PRD-A" $Policies
     $FolderName="PRD-A"
-    ApplyK8SAddonResourceTemplates $FolderName $IngressController $serviceMeshType $requireDefectDojo $k8sEnvironment $K8SLogMonitoringType $cloudProvider $DEFAULT_PRD_URL_SUFFIX
+    ApplyK8SAddonResourceTemplates $FolderName $IngressController $serviceMeshType $requireDefectDojo $k8sEnvironment $K8SLogMonitoringType $cloudProvider `
+    $DEFAULT_PRD_URL_SUFFIX $ENV:PRD_A_K8S_RG_NAME $env:PRD_A_LA_NAME
     
     
   }ELSE
@@ -1299,7 +1312,8 @@ if($dryRunforGithubActions -eq "false")
     ApplyK8SCoreTemplates "PRD-A" $Policies
     
     $FolderName="PRD-A"
-    ApplyK8SAddonResourceTemplates $FolderName $IngressController $serviceMeshType $requireDefectDojo $k8sEnvironment $K8SLogMonitoringType $cloudProvider 
+    ApplyK8SAddonResourceTemplates $FolderName $IngressController $serviceMeshType $requireDefectDojo $k8sEnvironment $K8SLogMonitoringType $cloudProvider `
+    $DEFAULT_PRD_URL_SUFFIX $ENV:PRD_A_K8S_RG_NAME $env:PRD_A_LA_NAME
     
     #deploy on secondary region
     BuildK8STFInfra $K8SMonitoringType "PRD-B" $IngressController $enable_azure_policy
@@ -1307,7 +1321,8 @@ if($dryRunforGithubActions -eq "false")
     ApplyK8SCoreTemplates "PRD-B" $Policies
 
     $FolderName="PRD-B"
-    ApplyK8SAddonResourceTemplates $FolderName $IngressController $serviceMeshType $requireDefectDojo $k8sEnvironment $K8SLogMonitoringType $cloudProvider $DEFAULT_PRD_URL_SUFFIX
+    ApplyK8SAddonResourceTemplates $FolderName $IngressController $serviceMeshType $requireDefectDojo $k8sEnvironment $K8SLogMonitoringType $cloudProvider `
+    $DEFAULT_PRD_URL_SUFFIX $ENV:PRD_B_K8S_RG_NAME $env:PRD_B_LA_NAME
     
 }
 
