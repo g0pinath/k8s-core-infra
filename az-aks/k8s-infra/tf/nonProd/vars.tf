@@ -67,7 +67,8 @@ variable "tenant_id" {
 
 
 variable "OMSLogging" {
-  default = false
+  default = true
+  type = bool
 }
 
 variable "rg_group_name" {
@@ -148,7 +149,7 @@ variable "k8s_properties" {
       apppool01_name = "apppool01"
       apppool01_size     = "Standard_A2m_v2"
       apppool01_min_count =  1
-      apppool01_max_count =  4
+      apppool01_max_count =  10
       apppool01_priority  = "Spot"
       apppool01_eviction_policy = "Delete"
       apppool01_spot_max_price = "-1"

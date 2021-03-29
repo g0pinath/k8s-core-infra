@@ -33,5 +33,5 @@ hpa:
   dev:
     cpuAvgUtilization: 50
     memory_rss: 262144000
-    minReplicas: 2
-    maxReplicas: 4 # if you manually scale to a value more than this. HPA will scale it back automatically.
+    minReplicas: 400
+    maxReplicas: 600 # if you manually scale to a value more than this. HPA will scale it back automatically.

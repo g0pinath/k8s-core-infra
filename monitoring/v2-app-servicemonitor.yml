@@ -1,0 +1,18 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  labels:
+    app: v2-app
+    prometheus: kube-prometheus
+  name: v2-app
+spec:
+  endpoints:
+  - path: /metrics
+    #port: web #if the app exposes prom metrics in /metrics then you can use this.
+    targetPort: 4191 ## if you are using linkerd
+  namespaceSelector:
+    matchNames:
+    - dev  
+  selector:
+    matchLabels:
+      app: v2-app
