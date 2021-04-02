@@ -171,3 +171,6 @@ https://docs.fluentbit.io/manual/installation/upgrade-notes#fluent-bit-v-1-1
 
 *** How much traffic/logs does fluentbit generate?
 With 10 nodes and 500 pods, 150 MB per hour was generated ~ translates to 120 AUD per month approx(with scaling down nodes and pods during business hours.)
+
+OMS
+With 10 nodes and 500 pods, 260 MB per hour was generated ~ translates to 200 AUD per month approx(with scaling down nodes and pods during business hours.)

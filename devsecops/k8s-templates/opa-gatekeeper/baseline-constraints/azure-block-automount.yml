@@ -5,7 +5,7 @@ metadata:
 spec:
   enforcementAction: deny
   match:
-    excludedNamespaces: ["kube-system", "gatekeeper-system", "monitoring", "linkerd", "ingress", "devops-addons"]
+    excludedNamespaces: ["kube-system", "gatekeeper-system", "monitoring", "linkerd", "ingress", "devops-addons", "dev"]
     kinds:
       - apiGroups: [""]
         kinds: ["Pod"]
