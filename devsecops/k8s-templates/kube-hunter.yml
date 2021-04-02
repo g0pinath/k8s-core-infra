@@ -8,7 +8,7 @@ metadata:
       heritage: self
       release: kube-hunter
     name: kube-hunter
-    namespace: devsecops
+    namespace: devops-addons
 spec:
     concurrencyPolicy: Forbid
     failedJobsHistoryLimit: 1

@@ -1271,6 +1271,7 @@ $cloudProvider, $DEFAULT_PRD_URL_SUFFIX, $K8S_RG_NAME, $LA_NAME)
     kubectl apply -f ./az-aks/k8s-yml-templates/voting-app-prereq/$FolderName/.
     #Apply Kube-Bench templates
     kubectl apply -f devsecops/k8s-templates/kube-bench.yml
+    kubectl apply -f devsecops/k8s-templates/kube-hunter.yml
     kubectl apply -f ./az-aks/k8s-yml-templates/core/ingress/$FolderName/.       
 }
 
