@@ -4,8 +4,9 @@ remote_state {
     backend = "azurerm"
     config = {
         key = "${path_relative_to_include()}/terraform.tfstate"
-        resource_group_name = "RG-DEV-K8S-CLUSTER"
-        storage_account_name = "azaksmetdevtf01"
+        resource_group_name = get_env("K8S_RG_NAME") #"RG-DEV-K8S-CLUSTER"
+        storage_account_name = get_env("TF_STORAGE_NAME")
+        #"azaksmetdevtf01"
         container_name = "tfstate"
     }
 }
