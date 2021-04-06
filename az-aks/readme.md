@@ -43,14 +43,6 @@ Steps to build an AKS cluster with the following resources
         - $env:DEV_TF_STORAGE_NAME -- this has to be unique.
         - $env:DEV_K8S_NAME -- this has to be unique.
         - $env:DEV_LA_NAME -- this has to be unique. 
-            Update the backend.tf manually with the storage account name and the RG where this storage account name will exist.
-            For example, update k8s-core-infra\az-aks\k8s-infra\tf\nonProd\backend.tf as below
-            backend "azurerm" {
-                    resource_group_name  = "RG-DEV-K8S-CLUSTER"
-                    storage_account_name = "azaks2021devtf"
-                    container_name       = "tfstate"
-                    key                  = "nonprod.terraform.tfstate"
-                }
         - $ENV:DEV_TLS_PRIVATE_KEY -- if you need TLS for the ingress controller, the private key portion of the cert needs to be stored as env var.
         - $env:DEV_K8S_SLACK_NOTIFICATIONS_URL - if Slack notification for Prometheus alerts are required.                   
 ## Public DNS Records - if you are exposing the ingress URLs via Azure Front Door.
@@ -70,14 +62,6 @@ Configuration options are
         - $env:PRD_A_TF_STORAGE_NAME -- this has to be unique. 
         - $env:PRD_A_K8S_NAME -- this has to be unique.
         - $env:PRD_A_LA_NAME -- this has to be unique. 
-            Update the backend.tf manually with the storage account name and the RG where this storage account name will exist.
-            For example, update k8s-core-infra\az-aks\k8s-infra\tf\PRD\backend.tf as below
-            backend "azurerm" {
-                    resource_group_name  = "RG-PRDA-K8S-CLUSTER"
-                    storage_account_name = "azaks2021prdatf"
-                    container_name       = "tfstate"
-                    key                  = "prd.terraform.tfstate"
-                }  
         - $env:PRD_K8S_SLACK_NOTIFICATIONS_URL - if Slack notification for Prometheus alerts are required.
 ##  For Primary and Secondary Region:
 All of the env vars from the above plus the below.     
@@ -86,14 +70,6 @@ All of the env vars from the above plus the below.
         - $env:PRD_B_TF_STORAGE_NAME -- this has to be unique. 
         - $env:PRD_B_K8S_NAME -- this has to be unique.
         - $env:PRD_B_LA_NAME -- this has to be unique. If you are not using OMS for logging, this is not required.
-            Update the backend.tf manually with the storage account name and the RG where this storage account name will exist.
-            For example, update k8s-core-infra\az-aks\k8s-infra\tf\PRD\backend.tf as below
-            backend "azurerm" {
-                    resource_group_name  = "RG-PRDB-K8S-CLUSTER"
-                    storage_account_name = "azaks2021prdbtf"
-                    container_name       = "tfstate"
-                    key                  = "prd.terraform.tfstate"
-                } 
         - $env:PRD_K8S_SLACK_NOTIFICATIONS_URL - if Slack notification for Prometheus alerts are required.                   
 ##  Common for both configurations.
         - $ENV:PRD_TLS_PRIVATE_KEY -- if you need TLS for the ingress controller, the private key portion of the cert needs to be stored as env var. 

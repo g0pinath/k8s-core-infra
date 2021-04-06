@@ -571,7 +571,8 @@ Function BuildK8STFInfra($K8SLogMonitoringType, $k8sEnvironment, $IngressControl
       $secretInPlainText = $secret.SecretValue | ConvertFrom-SecureString -AsPlainText
       $env:ARM_CLIENT_SECRET = $secretInPlainText
       $env:ARM_SUBSCRIPTION_ID = $env:DEV_ARM_SUBSCRIPTION_ID
-        
+      $env:TF_STORAGE_NAME = $env:DEV_TF_STORAGE_NAME
+      $env:K8S_RG_NAME=$env:DEV_K8S_RG_NAME  
           if($K8SLogMonitoringType -eq "OMS")
           {
             Write-Output "Entering OMS"
@@ -622,6 +623,8 @@ Function BuildK8STFInfra($K8SLogMonitoringType, $k8sEnvironment, $IngressControl
       $secret = Get-AzKeyVaultSecret -VaultName $env:PRD_A_K8S_KV_NAME -Name "PRD-ARM-CLIENT-SECRET"
       $secretInPlainText = $secret.SecretValue | ConvertFrom-SecureString -AsPlainText
       $env:ARM_CLIENT_SECRET = $secretInPlainText
+      $env:TF_STORAGE_NAME = $env:PRD_A_TF_STORAGE_NAME
+      $env:K8S_RG_NAME=$env:PRD_A_K8S_RG_NAME
       
       if($K8SLogMonitoringType -eq "OMS")
           {
@@ -674,6 +677,8 @@ Function BuildK8STFInfra($K8SLogMonitoringType, $k8sEnvironment, $IngressControl
       $secret = Get-AzKeyVaultSecret -VaultName $env:PRD_B_K8S_KV_NAME -Name "PRD-ARM-CLIENT-SECRET"
       $secretInPlainText = $secret.SecretValue | ConvertFrom-SecureString -AsPlainText
       $env:ARM_CLIENT_SECRET = $secretInPlainText
+      $env:TF_STORAGE_NAME = $env:PRD_B_TF_STORAGE_NAME
+      $env:K8S_RG_NAME=$env:PRD_B_K8S_RG_NAME
       
       if($K8SLogMonitoringType -eq "OMS")
           {
