@@ -385,7 +385,7 @@ Function CreateADPrincipalandCheckinCredstoKV($SPN_DP_TO_CHECK, $K8S_KV_NAME, $a
 Function CreateAppsSPN($k8sEnvironment, $appName, $cloudProvider, $dryRunforGithubActions)
 {
   #Login URL for DD must have suffix /complete/azuread-tenant-oauth2/ -- https://defectdojo.readthedocs.io/en/latest/social-authentication.html
-  Write-host "CreateAppsSPN called for $appname"
+  
   if($appName -eq "DEFECTDOJO")
   {
     $DEV_DD_LOGIN_URL_PREFIX = "https://" + $cloudProvider + "-" + $appName.tolower() + "-" + "dev."
@@ -554,7 +554,7 @@ Function CreateStorageAccountforTF($k8sEnvironment)
   
   
 }
-Function BuildK8STFInfra($K8SLogMonitoringType, $k8sEnvironment, $IngressController, $enable_azure_policy)
+Function BuildK8STFInfra($K8SLogMonitoringType, $k8sEnvironment, $IngressController, $enable_azure_policy, $applyTFTemplates)
 {
   switch($k8sEnvironment)
   {
@@ -583,13 +583,15 @@ Function BuildK8STFInfra($K8SLogMonitoringType, $k8sEnvironment, $IngressControl
                         --var rg_group_name=$env:DEV_K8S_RG_NAME --var enable_azure_policy=$enable_azure_policy `
                         --var IngressController=$IngressController --var requireAzureFrontDoor=$requireAzureFrontDoor `
                         --var la_name=$env:DEV_LA_NAME  --var k8s_name=$env:DEV_K8S_NAME
-
+            if($applyTFTemplates -eq "true")
+            {
             terragrunt apply --auto-approve  --var OMSLogging=true `
                         --var client_id=$env:ARM_CLIENT_ID --var client_secret=$env:ARM_CLIENT_SECRET `
                         --var subscription_id=$env:ARM_SUBSCRIPTION_ID --var tenant_id=$env:ARM_TENANT_ID `
                         --var rg_group_name=$env:DEV_K8S_RG_NAME --var enable_azure_policy=$enable_azure_policy `
                         --var IngressController=$IngressController --var requireAzureFrontDoor=$requireAzureFrontDoor  `
                         --var la_name=$env:DEV_LA_NAME  --var k8s_name=$env:DEV_K8S_NAME
+            }
           }
           else 
           {
@@ -601,13 +603,15 @@ Function BuildK8STFInfra($K8SLogMonitoringType, $k8sEnvironment, $IngressControl
                         --var rg_group_name=$env:DEV_K8S_RG_NAME --var enable_azure_policy=$enable_azure_policy `
                         --var IngressController=$IngressController --var requireAzureFrontDoor=$requireAzureFrontDoor `
                         --var la_name=$env:DEV_LA_NAME  --var k8s_name=$env:DEV_K8S_NAME
-            
+            if($applyTFTemplates -eq "true")
+            {
             terragrunt apply --auto-approve  --var OMSLogging=false `
                         --var client_id=$env:ARM_CLIENT_ID --var client_secret=$env:ARM_CLIENT_SECRET `
                         --var subscription_id=$env:ARM_SUBSCRIPTION_ID --var tenant_id=$env:ARM_TENANT_ID `
                         --var rg_group_name=$env:DEV_K8S_RG_NAME --var enable_azure_policy=$enable_azure_policy `
                         --var IngressController=$IngressController --var requireAzureFrontDoor=$requireAzureFrontDoor `
                         --var la_name=$env:DEV_LA_NAME  --var k8s_name=$env:DEV_K8S_NAME
+            }
           }
     }
     "PRD-A"
@@ -636,13 +640,15 @@ Function BuildK8STFInfra($K8SLogMonitoringType, $k8sEnvironment, $IngressControl
                         --var IngressController=$IngressController --var requireAzureFrontDoor=$requireAzureFrontDoor `
                         --var la_name=$env:PRD_A_LA_NAME  --var prd_a_k8s_name=$env:PRD_A_K8S_NAME
 
-            
+            if($applyTFTemplates -eq "true")
+            {            
             terragrunt apply --auto-approve  --var OMSLogging=true `
                         --var client_id=$env:ARM_CLIENT_ID --var client_secret=$env:ARM_CLIENT_SECRET `
                         --var subscription_id=$env:ARM_SUBSCRIPTION_ID --var tenant_id=$env:ARM_TENANT_ID `
                         --var rg_group_name=$env:PRD_A_K8S_RG_NAME  --var enable_azure_policy=$enable_azure_policy `
                         --var IngressController=$IngressController --var requireAzureFrontDoor=$requireAzureFrontDoor `
-                        --var la_name=$env:PRD_A_LA_NAME  --var prd_a_k8s_name=$env:PRD_A_K8S_NAME                        
+                        --var la_name=$env:PRD_A_LA_NAME  --var prd_a_k8s_name=$env:PRD_A_K8S_NAME   
+            }                     
           }
           else 
           {
@@ -654,13 +660,15 @@ Function BuildK8STFInfra($K8SLogMonitoringType, $k8sEnvironment, $IngressControl
                         --var IngressController=$IngressController --var requireAzureFrontDoor=$requireAzureFrontDoor `
                         --var la_name=$env:PRD_A_LA_NAME  --var prd_a_k8s_name=$env:PRD_A_K8S_NAME
 
-            
+            if($applyTFTemplates -eq "true")
+            {
             terragrunt apply --auto-approve  --var OMSLogging=false `
                         --var client_id=$env:ARM_CLIENT_ID --var client_secret=$env:ARM_CLIENT_SECRET `
                         --var subscription_id=$env:ARM_SUBSCRIPTION_ID --var tenant_id=$env:ARM_TENANT_ID `
                         --var rg_group_name=$env:PRD_A_K8S_RG_NAME  --var enable_azure_policy=$enable_azure_policy `
                         --var IngressController=$IngressController --var requireAzureFrontDoor=$requireAzureFrontDoor `
                         --var la_name=$env:PRD_A_LA_NAME  --var prd_a_k8s_name=$env:PRD_A_K8S_NAME
+            }
           }
   
     }
@@ -690,13 +698,15 @@ Function BuildK8STFInfra($K8SLogMonitoringType, $k8sEnvironment, $IngressControl
                         --var IngressController=$IngressController --var requireAzureFrontDoor=$requireAzureFrontDoor `
                         --var prd_b_la_name=$env:PRD_B_LA_NAME  --var prd_b_k8s_name=$env:PRD_B_K8S_NAME
 
-            
+            if($applyTFTemplates -eq "true")
+            {
             terragrunt apply --auto-approve  --var OMSLogging=true `
                         --var client_id=$env:ARM_CLIENT_ID --var client_secret=$env:ARM_CLIENT_SECRET `
                         --var subscription_id=$env:ARM_SUBSCRIPTION_ID --var tenant_id=$env:ARM_TENANT_ID `
                         --var prd_b_rg_group_name=$env:PRD_B_K8S_RG_NAME `
                         --var IngressController=$IngressController --var requireAzureFrontDoor=$requireAzureFrontDoor `
-                        --var prd_b_la_name=$env:PRD_B_LA_NAME  --var prd_b_k8s_name=$env:PRD_B_K8S_NAME                        
+                        --var prd_b_la_name=$env:PRD_B_LA_NAME  --var prd_b_k8s_name=$env:PRD_B_K8S_NAME    
+            }                    
           }
           else 
           {
@@ -708,13 +718,15 @@ Function BuildK8STFInfra($K8SLogMonitoringType, $k8sEnvironment, $IngressControl
                         --var IngressController=$IngressController --var requireAzureFrontDoor=$requireAzureFrontDoor `
                         --var prd_b_la_name=$env:PRD_B_LA_NAME  --var prd_b_k8s_name=$env:PRD_B_K8S_NAME
 
-            
+            if($applyTFTemplates -eq "true")
+            {
             terragrunt apply --auto-approve  --var OMSLogging=false `
                         --var client_id=$env:ARM_CLIENT_ID --var client_secret=$env:ARM_CLIENT_SECRET `
                         --var subscription_id=$env:ARM_SUBSCRIPTION_ID --var tenant_id=$env:ARM_TENANT_ID `
                         --var prd_b_rg_group_name=$env:PRD_B_K8S_RG_NAME `
                         --var IngressController=$IngressController --var requireAzureFrontDoor=$requireAzureFrontDoor `
                         --var prd_b_la_name=$env:PRD_B_LA_NAME  --var prd_b_k8s_name=$env:PRD_B_K8S_NAME
+            }
           }
   
     }
@@ -847,6 +859,7 @@ Function InstallAZProviders()
     Register-AzResourceProvider -ProviderNamespace Microsoft.ContainerRegistry
     Register-AzResourceProvider -ProviderNamespace microsoft.insights
     Register-AzResourceProvider -ProviderNamespace Microsoft.OperationalInsights
+    Register-AzResourceProvider -ProviderNamespace Microsoft.OperationsManagement
 
     # Feature register: enables installing the add-on
     Register-AzResourceProvider -ProviderNamespace  Microsoft.ContainerService # --name K8S-AzurePolicyAutoApprove
@@ -1290,10 +1303,10 @@ else {
 
 if($dryRunforGithubActions -eq "false")
 {
-  if($applyTFTemplates -eq "true" -and  $k8sEnvironment -eq "DEV")
+  if($k8sEnvironment -eq "DEV")
   { 
     
-    BuildK8STFInfra $K8SLogMonitoringType $k8sEnvironment $IngressController $enable_azure_policy
+    BuildK8STFInfra $K8SLogMonitoringType $k8sEnvironment $IngressController $enable_azure_policy $applyTFTemplates
     LogintoK8S $ENV:ARM_SUBSCRIPTION_ID $ENV:DEV_K8S_NAME $ENV:ARM_CLIENT_ID $ENV:ARM_CLIENT_SECRET $ENV:DEV_K8S_RG_NAME
     ApplyK8SCoreTemplates $k8sEnvironment $Policies
     $FolderName="NONPROD"
@@ -1303,7 +1316,7 @@ if($dryRunforGithubActions -eq "false")
     
   }elseif($productionClusterConfigType -EQ "PrimaryRegionOnly")
   {
-    BuildK8STFInfra $K8SLogMonitoringType "PRD-A" $IngressController $enable_azure_policy
+    BuildK8STFInfra $K8SLogMonitoringType "PRD-A" $IngressController $enable_azure_policy $applyTFTemplates
     LogintoK8S $ENV:ARM_SUBSCRIPTION_ID $ENV:PRD_A_K8S_NAME $ENV:ARM_CLIENT_ID $ENV:ARM_CLIENT_SECRET $ENV:PRD_A_K8S_RG_NAME
     ApplyK8SCoreTemplates "PRD-A" $Policies
     $FolderName="PRD-A"
@@ -1314,7 +1327,7 @@ if($dryRunforGithubActions -eq "false")
   }ELSE
   {
     #deploy in primary region
-    BuildK8STFInfra $K8SLogMonitoringType "PRD-A" $IngressController $enable_azure_policy
+    BuildK8STFInfra $K8SLogMonitoringType "PRD-A" $IngressController $enable_azure_policy $applyTFTemplates
     LogintoK8S $ENV:ARM_SUBSCRIPTION_ID $ENV:PRD_A_K8S_NAME $ENV:ARM_CLIENT_ID $ENV:ARM_CLIENT_SECRET $ENV:PRD_A_K8S_RG_NAME
     ApplyK8SCoreTemplates "PRD-A" $Policies
     
@@ -1323,7 +1336,7 @@ if($dryRunforGithubActions -eq "false")
     $DEFAULT_PRD_URL_SUFFIX $ENV:PRD_A_K8S_RG_NAME $env:PRD_A_LA_NAME
     
     #deploy on secondary region
-    BuildK8STFInfra $K8SLogMonitoringType "PRD-B" $IngressController $enable_azure_policy
+    BuildK8STFInfra $K8SLogMonitoringType "PRD-B" $IngressController $enable_azure_policy $applyTFTemplates
     LogintoK8S $ENV:ARM_SUBSCRIPTION_ID $ENV:PRD_B_K8S_NAME $ENV:ARM_CLIENT_ID $ENV:ARM_CLIENT_SECRET $ENV:PRD_B_K8S_RG_NAME
     ApplyK8SCoreTemplates "PRD-B" $Policies
 
