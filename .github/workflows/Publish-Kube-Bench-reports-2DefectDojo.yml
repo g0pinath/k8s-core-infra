@@ -22,23 +22,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: setup DD - Create Product Types and Products
-        run: |
-                #To fetch the tokens
-                $headers = @{
-                    'username' = $env:DD_Admin_User; 'password' = $env:DD_Admin_Password
-                }
-                $baseURL="https://az-defectdojo-dev.cloudkube.xyz"  
-                $TokenRaw = Invoke-WebRequest -Uri https://az-defectdojo-dev.cloudkube.xyz/api/v2/api-token-auth/ -Method 'POST'  -Body $headers
-                $Token = ($TokenRaw | ConvertFrom-Json).Token
-                $env:DEFECTDOJO_API_TOKEN = $Token
-
-                .\devsecops\Scripts\CreateDDProductypes.ps1 -product_type k8s-scans -baseURL $baseURL
-                .\devsecops\Scripts\CreateDDProducts.ps1 -product_name kube-bench -prod_type k8s-scans  `
-                -tags kube-bench -description kube-bench -lifecyle "Development" -baseURL $baseURL 
-                #create an engagement if not exists.
-                .\devsecops\Scripts\CreateDDEngagements.ps1 -product_name kube-bench -prod_type k8s-scans `
-                 -tags kube-bench -description kube-bench -lifecyle Development -baseURL $baseURL 
       - name: Login via Az module
         uses: azure/login@v1
         with:
@@ -48,11 +31,11 @@ jobs:
 #Export the kube-bench pod logs to json.                          
       - name: Kubectl logs <kube-bench-pod> && Dump it to JSON
         run: |
-              az account set -s $env:DEV_ARM_SUBSCRIPTION_ID 
-              
-              az aks Get-Credentials -g $env:DEV_K8S_RG_NAME  -n $env:DEV_K8S_NAME --overwrite-existing --admin
-              
-              choco install kubernetes-cli
+              #az account set -s $env:DEV_ARM_SUBSCRIPTION_ID 
+              az account set -s 6f481927-b09b-4d4c-8329-27751073cfd2
+              #az aks Get-Credentials -g $env:DEV_K8S_RG_NAME  -n $env:DEV_K8S_NAME --overwrite-existing --admin
+              az aks Get-Credentials -g RG-DEV-K8S-CLUSTER  -n metaks-np-ae --overwrite-existing --admin
+              #choco install kubernetes-cli
               #find the pod name
               $podsjson = kubectl get pods -n devops-addons -o json | convertfrom-json
               $kube_bench_pod_name = ($podsjson.items | where {$_.metadata.name -like "*kube-bench*"}).metadata.name
