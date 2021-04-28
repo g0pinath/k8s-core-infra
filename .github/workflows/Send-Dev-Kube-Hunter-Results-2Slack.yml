@@ -2,8 +2,8 @@ name: Send-Dev-Kube-Hunter-Results-2Slack
 env:
   DEV_ARM_SUBSCRIPTION_ID: ${{ secrets.DEV_ARM_SUBSCRIPTION_ID }} 
   DEV_K8S_RG_NAME:  "RG-DEV-K8S-CLUSTER" 
-  DEV_K8S_KV_NAME: ${{ secrets.DEV_K8S_KV_NAME }} 
-  DEV_K8S_NAME: ${{ secrets.DEV_K8S_NAME }} 
+  DEV_K8S_KV_NAME: "KV-MET-DEV-K8S01" 
+  DEV_K8S_NAME: "metaks-np-ae"
   REPORTS_STORAGE_KEY: ${{ secrets.DEV_REPORTS_STORAGE_KEY }}
   STORAGE_ACCOUNT_NAME: "azaksmetdevtf01"
   #HTML reports are uploaded to this storage account 
