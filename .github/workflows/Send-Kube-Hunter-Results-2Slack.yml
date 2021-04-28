@@ -30,8 +30,8 @@ jobs:
                 $headers = @{
                     'username' = $env:DD_Admin_User; 'password' = $env:DD_Admin_Password
                 }
-                $baseURL="https://az-defectdojo-dev.cloudkube.xyz"  
-                $TokenRaw = Invoke-WebRequest -Uri https://az-defectdojo-dev.cloudkube.xyz/api/v2/api-token-auth/ -Method 'POST'  -Body $headers
+                $baseURL="https://defectdojo-dev.cloudkube.xyz"  
+                $TokenRaw = Invoke-WebRequest -Uri https://defectdojo-dev.cloudkube.xyz/api/v2/api-token-auth/ -Method 'POST'  -Body $headers
                 $Token = ($TokenRaw | ConvertFrom-Json).Token
                 $env:DEFECTDOJO_API_TOKEN = $Token
 
