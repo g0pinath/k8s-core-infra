@@ -1,6 +1,6 @@
 name: Send-Dev-Kube-Hunter-Results-2Slack
 env:
-  DEV_ARM_SUBSCRIPTION_ID: ${{ secrets.DEV_ARM_SUBSCRIPTION_ID }} 
+  DEV_ARM_SUBSCRIPTION_ID: "6f481927-b09b-4d4c-8329-27751073cfd2" #${{ secrets.DEV_ARM_SUBSCRIPTION_ID }} 
   DEV_K8S_RG_NAME:  "RG-DEV-K8S-CLUSTER" 
   DEV_K8S_KV_NAME: "KV-MET-DEV-K8S01" 
   DEV_K8S_NAME: "metaks-np-ae"
