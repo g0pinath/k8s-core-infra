@@ -42,7 +42,8 @@ jobs:
       - name: Login via Az module
         uses: azure/login@v1
         with:
-          creds: ${{secrets.DEV_AZURE_CREDENTIALS}}
+          creds: ${{secrets.DEV_MSDN_AZURE_CREDENTIALS}}
+          # should be DEV_AZURE_CREDENTIALS
           enable-AzPSSession: true 
 #Export the kube-bench pod logs to json.                          
       - name: Kubectl logs <kube-bench-pod> && Dump it to JSON
