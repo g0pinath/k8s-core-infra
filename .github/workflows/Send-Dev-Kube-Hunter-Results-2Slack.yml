@@ -41,8 +41,9 @@ jobs:
               $date = Get-Date -Format yyyy-MM 
               #after midnight date might change so just look for year and month pattern
               foreach($line in $lines){if($line -notlike "*$date*"){$json+=$line}}
-              $Vulnerabilities = ($json | ConvertFrom-Json | select vulnerabilities).Vulnerabilities
-              .\.github\workflows\scripts\GenHTMLReport.ps1 -K8S_NAME $env:DEV_K8S_NAME -vulnerabilities $Vulnerabilities
+              Write-Output "Printing JSON -- $json"
+              #$Vulnerabilities = ($json | ConvertFrom-Json | select vulnerabilities).Vulnerabilities
+              #.\.github\workflows\scripts\GenHTMLReport.ps1 -K8S_NAME $env:DEV_K8S_NAME -vulnerabilities $Vulnerabilities
               
       - name: Publish JSON reports to Slack
         run: |
@@ -70,7 +71,7 @@ jobs:
                                     -TitleLink $url `
                                     -Pretext 'Post Deployment Steps - validate website status' `
                                     -Fallback 'IIS and Website validation reports' 
-                Send-SlackMessage -Uri $SLACK_CHANNEL_TOKEN -Attachments $att 
+                #Send-SlackMessage -Uri $SLACK_CHANNEL_TOKEN -Attachments $att 
                 
       #scan type is case sensitive. Available values are below -- reference only.
       #Available values : , Netsparker Scan, Burp Scan, Nessus Scan, Nmap Scan, Nexpose Scan, AppSpider Scan, Veracode Scan, Checkmarx Scan, Checkmarx Scan detailed, Crashtest Security JSON File, Crashtest Security XML File, ZAP Scan, Arachni Scan, VCG Scan, Dependency Check Scan, Dependency Track Finding Packaging Format (FPF) Export, Retire.js Scan, Node Security Platform Scan, NPM Audit Scan, Qualys Scan, Qualys Infrastructure Scan (WebGUI XML), Qualys Webapp Scan, OpenVAS CSV, Snyk Scan, Generic Findings Import, Trustwave Scan (CSV), SKF Scan, Clair Klar Scan, Bandit Scan, ESLint Scan, SSL Labs Scan, Acunetix Scan, Fortify Scan, Gosec Scanner, SonarQube Scan, SonarQube Scan detailed, SonarQube API Import, MobSF Scan, Trufflehog Scan, Nikto Scan, Clair Scan, Brakeman Scan, SpotBugs Scan, AWS Scout2 Scan, AWS Prowler Scan, IBM AppScan DAST, PHP Security Audit v2, PHP Symfony Security Check, Safety Scan, DawnScanner Scan, Anchore Engine Scan, Bundler-Audit Scan, Twistlock Image Scan, Kiuwan Scan, Blackduck Hub Scan, Blackduck Component Risk, Openscap Vulnerability Scan, Wapiti Scan, Immuniweb Scan, Sonatype Application Scan, Cobalt.io Scan, Mozilla Observatory Scan, Whitesource Scan, Contrast Scan, Microfocus Webinspect Scan, Wpscan, Sslscan, JFrog Xray Scan, Sslyze Scan, SSLyze 3 Scan (JSON), Testssl Scan, Hadolint Dockerfile check, Aqua Scan, HackerOne Cases, Xanitizer Scan, Outpost24 Scan, Burp Enterprise Scan, DSOP Scan, Trivy Scan, Anchore Enterprise Policy Check, Gitleaks Scan, Choctaw Hog Scan, Harbor Vulnerability Scan, Github Vulnerability Scan, Yarn Audit Scan, BugCrowd Scan, GitLab SAST Report, AWS Security Hub Scan, GitLab Dependency Scanning Report, HuskyCI Report, Semgrep JSON Report, Risk Recon API Importer, DrHeader JSON Importer, Checkov Scan, kube-hunter Scan, CCVS Report, ORT evaluated model Importer, SARIF
