@@ -44,7 +44,7 @@ jobs:
               Write-Output "--------------------------------"
               $date = Get-Date -Format yyyy-MM 
               #after midnight date might change so just look for year and month pattern
-              foreach($line in $lines){if($line -notlike "*$date*"){$json+=$line}}
+              foreach($line in $logs){if($line -notlike "*$date*"){$json+=$line}}
               Write-Output "Printing JSON -- $json"
               Write-Output "--------------------------------"
               #$Vulnerabilities = ($json | ConvertFrom-Json | select vulnerabilities).Vulnerabilities
