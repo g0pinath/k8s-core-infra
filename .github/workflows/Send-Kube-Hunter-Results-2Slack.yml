@@ -1,4 +1,4 @@
-name: Publish-Kube-Bench-reports-2DefectDojo
+name: Send-Kube-Hunter-Results-2Slack
 env:
   DEFECTDOJO_API_TOKEN:  ${{ secrets.DEFECTDOJO_API_TOKEN }}
   Kube_Bench_Engagement_Name: 'kube-bench'
