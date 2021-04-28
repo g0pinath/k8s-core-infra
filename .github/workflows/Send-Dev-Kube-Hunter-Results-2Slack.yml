@@ -73,9 +73,9 @@ jobs:
                 Import-Module PSSlack
                 $SLACK_CHANNEL_TOKEN = $env:SLACK_CHANNEL_TOKEN
                 $att = New-SlackMessageAttachment -Color $_PSSlackColorMap.green `
-                                    -Title 'Click here to download post deployment validation reports' `
+                                    -Title 'Click here to download kube-hunter vulnerability' `
                                     -TitleLink $url `
-                                    -Pretext 'Post Deployment Steps - validate website status' `
+                                    -Pretext 'kube-hunter vulnerability report' `
                                     -Fallback 'IIS and Website validation reports' 
-                #Send-SlackMessage -Uri $SLACK_CHANNEL_TOKEN -Attachments $att 
+                Send-SlackMessage -Uri $SLACK_CHANNEL_TOKEN -Attachments $att 
                 
