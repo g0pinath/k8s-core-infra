@@ -53,10 +53,11 @@ jobs:
       - name: Publish JSON reports to Slack
         run: |
                 #send to slack -- Slack needs the file stored somewhere and in this case we are using Azure Blob storage.
+                #Windows-latest runner has issues with Az module or we can use new-azcurrentstorageaccount without keys.
                 Set-PSRepository -Name PSGallery -InstallationPolicy Trusted          
-                Import-Module Az.Storage
+                Import-Module Azure.Storage
                 $Key = $ENV:REPORTS_STORAGE_KEY
-                $SAContext = New-AzStorageContext -StorageAccountName "$env:STORAGE_ACCOUNT_NAME" -StorageAccountKey "$Key"
+                $SAContext = New-AzureStorageContext -StorageAccountName "$env:STORAGE_ACCOUNT_NAME" -StorageAccountKey "$Key"
                 $containerName = "reports"
                 $blobName = "$env:DEV_K8S_NAME/kube_hunter_reports.html"
                 $destinationFileName = "kube_hunter_reports.html"
@@ -65,7 +66,7 @@ jobs:
                 Start-Sleep -S 60
                 $StartTime = Get-Date 
                 $EndTime = (Get-Date).AddHours(24)
-                $sasToken = New-AzStorageBlobSASToken -Container build-artifacts -Blob $blobName  -Context $SAContext -Permission rl -StartTime $StartTime -ExpiryTime $EndTime
+                $sasToken = New-AzureStorageBlobSASToken -Container build-artifacts -Blob $blobName  -Context $SAContext -Permission rl -StartTime $StartTime -ExpiryTime $EndTime
                 $URL = "https://"+ "$env:STORAGE_ACCOUNT_NAME" + ".blob.core.windows.net/" + $containerName + "/" + $blobName + $sasToken
                 
                 Install-Module PSSlack
@@ -78,6 +79,3 @@ jobs:
                                     -Fallback 'IIS and Website validation reports' 
                 #Send-SlackMessage -Uri $SLACK_CHANNEL_TOKEN -Attachments $att 
                 
-      #scan type is case sensitive. Available values are below -- reference only.
-      #Available values : , Netsparker Scan, Burp Scan, Nessus Scan, Nmap Scan, Nexpose Scan, AppSpider Scan, Veracode Scan, Checkmarx Scan, Checkmarx Scan detailed, Crashtest Security JSON File, Crashtest Security XML File, ZAP Scan, Arachni Scan, VCG Scan, Dependency Check Scan, Dependency Track Finding Packaging Format (FPF) Export, Retire.js Scan, Node Security Platform Scan, NPM Audit Scan, Qualys Scan, Qualys Infrastructure Scan (WebGUI XML), Qualys Webapp Scan, OpenVAS CSV, Snyk Scan, Generic Findings Import, Trustwave Scan (CSV), SKF Scan, Clair Klar Scan, Bandit Scan, ESLint Scan, SSL Labs Scan, Acunetix Scan, Fortify Scan, Gosec Scanner, SonarQube Scan, SonarQube Scan detailed, SonarQube API Import, MobSF Scan, Trufflehog Scan, Nikto Scan, Clair Scan, Brakeman Scan, SpotBugs Scan, AWS Scout2 Scan, AWS Prowler Scan, IBM AppScan DAST, PHP Security Audit v2, PHP Symfony Security Check, Safety Scan, DawnScanner Scan, Anchore Engine Scan, Bundler-Audit Scan, Twistlock Image Scan, Kiuwan Scan, Blackduck Hub Scan, Blackduck Component Risk, Openscap Vulnerability Scan, Wapiti Scan, Immuniweb Scan, Sonatype Application Scan, Cobalt.io Scan, Mozilla Observatory Scan, Whitesource Scan, Contrast Scan, Microfocus Webinspect Scan, Wpscan, Sslscan, JFrog Xray Scan, Sslyze Scan, SSLyze 3 Scan (JSON), Testssl Scan, Hadolint Dockerfile check, Aqua Scan, HackerOne Cases, Xanitizer Scan, Outpost24 Scan, Burp Enterprise Scan, DSOP Scan, Trivy Scan, Anchore Enterprise Policy Check, Gitleaks Scan, Choctaw Hog Scan, Harbor Vulnerability Scan, Github Vulnerability Scan, Yarn Audit Scan, BugCrowd Scan, GitLab SAST Report, AWS Security Hub Scan, GitLab Dependency Scanning Report, HuskyCI Report, Semgrep JSON Report, Risk Recon API Importer, DrHeader JSON Importer, Checkov Scan, kube-hunter Scan, CCVS Report, ORT evaluated model Importer, SARIF
-      #the json file has to be in a specific format for DD to consume, refer the working sample in devsecops\scripts folder.
