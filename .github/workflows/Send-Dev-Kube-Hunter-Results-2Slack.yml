@@ -1,16 +1,14 @@
 name: Send-Dev-Kube-Hunter-Results-2Slack
 env:
-  DEFECTDOJO_API_TOKEN:  ${{ secrets.DEFECTDOJO_API_TOKEN }}
-  Kube_hunter_Engagement_Name: 'kube-hunter'
   DEV_ARM_SUBSCRIPTION_ID: ${{ secrets.DEV_ARM_SUBSCRIPTION_ID }} 
   DEV_K8S_RG_NAME:  "RG-DEV-K8S-CLUSTER" 
   DEV_K8S_KV_NAME: ${{ secrets.DEV_K8S_KV_NAME }} 
   DEV_K8S_NAME: ${{ secrets.DEV_K8S_NAME }} 
-  REPORTS_STORAGE_KEY: ${{ secrets.REPORTS_STORAGE_KEY }}
+  REPORTS_STORAGE_KEY: ${{ secrets.DEV_REPORTS_STORAGE_KEY }}
+  STORAGE_ACCOUNT_NAME: "azaksmetdevtf01"
   #HTML reports are uploaded to this storage account 
-  
-  DD_Admin_User: admin
-  DD_Admin_Password: ${{ secrets.DEV_DD_ADMIN_PWD }}
+  SLACK_CHANNEL_TOKEN: ${{ secrets.SLACK_CHANNEL_TOKEN }}
+
 on:
   workflow_dispatch:  
   #push:
@@ -29,7 +27,7 @@ jobs:
       - name: Login via Az module
         uses: azure/login@v1
         with:
-          creds: ${{secrets.DEV_AZURE_CREDENTIALS}}
+          creds: ${{secrets.DEV_MSDN_AZURE_CREDENTIALS}}
           enable-AzPSSession: true 
 #Export the kube-hunter pod logs to json.                          
       - name: Kubectl logs <kube-hunter-pod> && Dump it to JSON
@@ -43,7 +41,7 @@ jobs:
               $date = Get-Date -Format yyyy-MM-dd
               foreach($line in $lines){if($line -notlike "*$date*"){$json+=$line}}
               $Vulnerabilities = ($json | ConvertFrom-Json | select vulnerabilities).Vulnerabilities
-              .\.github\workflows\scripts\ConsolidateNEmailReports.ps1 -K8S_NAME $env:DEV_K8S_NAME -vulnerabilities $Vulnerabilities
+              .\.github\workflows\scripts\GenHTMLReport.ps1 -K8S_NAME $env:DEV_K8S_NAME -vulnerabilities $Vulnerabilities
               
       - name: Publish JSON reports to Slack
         run: |
@@ -51,25 +49,27 @@ jobs:
               Set-PSRepository -Name PSGallery -InstallationPolicy Trusted          
               Import-Module Az.Storage
               $Key = $ENV:REPORTS_STORAGE_KEY
-              $SAContext = New-AzStorageContext -StorageAccountName "$env:DEV_REPO_STORAGE" -StorageAccountKey "$Key"
-              $containerName = "build-artifacts"
-              $blobName = "reports/$env:DEV_K8S_NAME/kube_hunter_reports.html"
+              $SAContext = New-AzStorageContext -StorageAccountName "$env:STORAGE_ACCOUNT_NAME" -StorageAccountKey "$Key"
+              $containerName = "reports"
+              $blobName = "$env:DEV_K8S_NAME/kube_hunter_reports.html"
               $destinationFileName = "kube_hunter_reports.html"
+              Set-AzureStorageBlobContent -Container "$containerName" -File "$destinationFileName" `
+              -Blob "$blobName" -Force  -Context $SAContext
               Start-Sleep -S 60
               $StartTime = Get-Date 
               $EndTime = (Get-Date).AddHours(24)
               $sasToken = New-AzStorageBlobSASToken -Container build-artifacts -Blob $blobName  -Context $SAContext -Permission rl -StartTime $StartTime -ExpiryTime $EndTime
-              $URL = "https://"+ "$env:DEV_REPO_STORAGE" + ".blob.core.windows.net/" + $containerName + "/" + $blobName + $sasToken
-              Get-AzStorageBlobContent -Container "$containerName" -Blob "$blobName" -Destination $destinationFileName -Context $SAContext
+              $URL = "https://"+ "$env:STORAGE_ACCOUNT_NAME" + ".blob.core.windows.net/" + $containerName + "/" + $blobName + $sasToken
+              
               Install-Module PSSlack
               Import-Module PSSlack
-              $SLACK_CHANNEL_MTG = $env:SLACK_CHANNEL_MTG
+              $SLACK_CHANNEL_TOKEN = $env:SLACK_CHANNEL_TOKEN
               $att = New-SlackMessageAttachment -Color $_PSSlackColorMap.green `
                                   -Title 'Click here to download post deployment validation reports' `
                                   -TitleLink $url `
                                   -Pretext 'Post Deployment Steps - validate website status' `
                                   -Fallback 'IIS and Website validation reports' 
-              Send-SlackMessage -Uri $SLACK_CHANNEL_MTG -Attachments $att 
+              Send-SlackMessage -Uri $SLACK_CHANNEL_TOKEN -Attachments $att 
               
       #scan type is case sensitive. Available values are below -- reference only.
       #Available values : , Netsparker Scan, Burp Scan, Nessus Scan, Nmap Scan, Nexpose Scan, AppSpider Scan, Veracode Scan, Checkmarx Scan, Checkmarx Scan detailed, Crashtest Security JSON File, Crashtest Security XML File, ZAP Scan, Arachni Scan, VCG Scan, Dependency Check Scan, Dependency Track Finding Packaging Format (FPF) Export, Retire.js Scan, Node Security Platform Scan, NPM Audit Scan, Qualys Scan, Qualys Infrastructure Scan (WebGUI XML), Qualys Webapp Scan, OpenVAS CSV, Snyk Scan, Generic Findings Import, Trustwave Scan (CSV), SKF Scan, Clair Klar Scan, Bandit Scan, ESLint Scan, SSL Labs Scan, Acunetix Scan, Fortify Scan, Gosec Scanner, SonarQube Scan, SonarQube Scan detailed, SonarQube API Import, MobSF Scan, Trufflehog Scan, Nikto Scan, Clair Scan, Brakeman Scan, SpotBugs Scan, AWS Scout2 Scan, AWS Prowler Scan, IBM AppScan DAST, PHP Security Audit v2, PHP Symfony Security Check, Safety Scan, DawnScanner Scan, Anchore Engine Scan, Bundler-Audit Scan, Twistlock Image Scan, Kiuwan Scan, Blackduck Hub Scan, Blackduck Component Risk, Openscap Vulnerability Scan, Wapiti Scan, Immuniweb Scan, Sonatype Application Scan, Cobalt.io Scan, Mozilla Observatory Scan, Whitesource Scan, Contrast Scan, Microfocus Webinspect Scan, Wpscan, Sslscan, JFrog Xray Scan, Sslyze Scan, SSLyze 3 Scan (JSON), Testssl Scan, Hadolint Dockerfile check, Aqua Scan, HackerOne Cases, Xanitizer Scan, Outpost24 Scan, Burp Enterprise Scan, DSOP Scan, Trivy Scan, Anchore Enterprise Policy Check, Gitleaks Scan, Choctaw Hog Scan, Harbor Vulnerability Scan, Github Vulnerability Scan, Yarn Audit Scan, BugCrowd Scan, GitLab SAST Report, AWS Security Hub Scan, GitLab Dependency Scanning Report, HuskyCI Report, Semgrep JSON Report, Risk Recon API Importer, DrHeader JSON Importer, Checkov Scan, kube-hunter Scan, CCVS Report, ORT evaluated model Importer, SARIF
