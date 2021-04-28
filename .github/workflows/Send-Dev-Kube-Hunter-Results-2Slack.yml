@@ -38,7 +38,8 @@ jobs:
               $podsjson = kubectl get pods -n devops-addons -o json | convertfrom-json
               $kube_hunter_pod_name = ($podsjson.items | where {$_.metadata.name -like "*kube-hunter*"}).metadata.name
               $logs = kubectl logs $kube_hunter_pod_name  -n devops-addons  
-              $date = Get-Date -Format yyyy-MM-dd
+              $date = Get-Date -Format yyyy-MM 
+              #after midnight date might change so just look for year and month pattern
               foreach($line in $lines){if($line -notlike "*$date*"){$json+=$line}}
               $Vulnerabilities = ($json | ConvertFrom-Json | select vulnerabilities).Vulnerabilities
               .\.github\workflows\scripts\GenHTMLReport.ps1 -K8S_NAME $env:DEV_K8S_NAME -vulnerabilities $Vulnerabilities
