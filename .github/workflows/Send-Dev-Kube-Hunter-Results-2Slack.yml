@@ -66,7 +66,7 @@ jobs:
                 Start-Sleep -S 60
                 $StartTime = Get-Date 
                 $EndTime = (Get-Date).AddHours(24)
-                $sasToken = New-AzureStorageBlobSASToken -Container build-artifacts -Blob $blobName  -Context $SAContext -Permission rl -StartTime $StartTime -ExpiryTime $EndTime
+                $sasToken = New-AzureStorageBlobSASToken -Container $containerName -Blob $blobName  -Context $SAContext -Permission rl -StartTime $StartTime -ExpiryTime $EndTime
                 $URL = "https://"+ "$env:STORAGE_ACCOUNT_NAME" + ".blob.core.windows.net/" + $containerName + "/" + $blobName + $sasToken
                 
                 Install-Module PSSlack
