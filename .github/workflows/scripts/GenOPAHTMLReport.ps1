@@ -80,7 +80,7 @@ $greenColor = "#01DF3A"
 $orangeColor = "#FBB917"
 $whiteColor = "#FFFFFF"
     
-[string]$HeadingofReport="Kube-Hunter Vulnerability Report for $K8S_NAME - $ReportTime"
+[string]$HeadingofReport="OPA-Gatekeeper Compliance Report for $K8S_NAME - $ReportTime"
 
 $HTMLTitleoutput = HTMLHeader4Reports  $HeadingofReport
 $ColumnNameOutput = TableHeader4Reports "constraintName" "isViolated" "numberOfViolations" "violatingObjects(type)" "policyEnforcementType"
