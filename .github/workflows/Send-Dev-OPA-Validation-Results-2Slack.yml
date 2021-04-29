@@ -1,4 +1,4 @@
-name: Send-Dev-OPA-Gatekeeper-Compliance-2Slack
+name: Send-OPA-Gatekeeper-Compliance-2Slack
 env:
   DEV_ARM_SUBSCRIPTION_ID: "6f481927-b09b-4d4c-8329-27751073cfd2" #${{ secrets.DEV_ARM_SUBSCRIPTION_ID }} 
   DEV_K8S_RG_NAME:  "RG-DEV-K8S-CLUSTER" 
@@ -18,7 +18,7 @@ on:
     - cron: "0 13 * * *"  
 
 jobs:
-  DefectDojo-Report:
+  Send-OPA-Gatekeeper-Compliance-Report-2Slack:
     runs-on: windows-latest  # For a list of available runner types, refer to  # https://help.github.com/en/actions/reference/workflow-syntax-for-github-actions#jobsjob_idruns-on
     #needs: MRS-Dev-PreValidation
     steps:
@@ -33,6 +33,7 @@ jobs:
 #Export the opa-gatekeeper pod logs to json.                          
       - name: Kubectl logs <opa-gatekeeper-pod> && Dump it to JSON
         run: |
+              Set-PSRepository -Name PSGallery -InstallationPolicy Trusted          
               Install-Module powershell-yaml
               Import-Module powershell-yaml
               az account set -s $env:DEV_ARM_SUBSCRIPTION_ID 

@@ -9,8 +9,8 @@ env:
   DD_ADMIN_PWD: ${{ secrets.DEV_DD_ADMIN_PWD }}
 on:
   workflow_dispatch:  
-  push:
-    branches: [ develop ]   
+  #push:
+  #  branches: [ develop ]   
   schedule:
     - cron: "0 13 * * *"  
 
