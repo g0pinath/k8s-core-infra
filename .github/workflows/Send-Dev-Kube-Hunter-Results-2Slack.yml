@@ -36,7 +36,7 @@ jobs:
               az aks Get-Credentials -g $env:DEV_K8S_RG_NAME  -n $env:DEV_K8S_NAME --overwrite-existing --admin
               #find the pod name
               $podsjson = kubectl get pods -n devops-addons -o json | convertfrom-json
-              $kube_hunter_pod_name = ($podsjson.items | where {$_.metadata.name -like "*kube-hunter*"}).metadata.name
+              $kube_hunter_pod_name = ($podsjson.items | where {$_.metadata.name -like "*kube-hunter*" -and $_.status.phase -like "*Succeeded*"}).metadata.name
               Write-Output "Pod name is -- $kube_hunter_pod_name"
               $logs = kubectl logs $kube_hunter_pod_name  -n devops-addons  
               Write-Output "--------------------------------"
