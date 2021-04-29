@@ -14,7 +14,7 @@ on:
   workflow_dispatch:  
   #push:
   #  branches: [ develop ]   
-  schedule:
+  #schedule:
     - cron: "0 13 * * *"  
 
 jobs:

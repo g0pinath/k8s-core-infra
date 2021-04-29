@@ -14,8 +14,8 @@ on:
   workflow_dispatch:  
   #push:
   #  branches: [ develop ]   
-  schedule:
-    - cron: "0 13 * * *"  
+  #schedule:
+  #  - cron: "0 13 * * *"  
 
 jobs:
   Send-OPA-Gatekeeper-Compliance-Report-2Slack:
