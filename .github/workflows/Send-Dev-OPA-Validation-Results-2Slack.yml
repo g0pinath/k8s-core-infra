@@ -8,6 +8,7 @@ env:
   STORAGE_ACCOUNT_NAME: "azaksmetdevtf01"
   #HTML reports are uploaded to this storage account 
   SLACK_CHANNEL_TOKEN: ${{ secrets.SLACK_CHANNEL_TOKEN }}
+  HTML_REPORT_NAME: "opa_gatekeeper_reports.html"
 
 on:
   workflow_dispatch:  
@@ -35,17 +36,9 @@ jobs:
               az account set -s $env:DEV_ARM_SUBSCRIPTION_ID 
               az aks Get-Credentials -g $env:DEV_K8S_RG_NAME  -n $env:DEV_K8S_NAME --overwrite-existing --admin
               #find the pod name
-              $podsjson = kubectl get pods -n gatekeeper-system -o json | convertfrom-json
-              $opa_gatekeeper_pod_name = ($podsjson.items | where {$_.metadata.name -like "*gatekeeper-audit*"}).metadata.name
-              Write-Output "Pod name is -- $opa_gatekeeper_pod_name"
-              $opa = kubectl logs gatekeeper-audit-56f5d8b566-xkg2c -n gatekeeper-system --tail=50
-              
-              $date = Get-Date -Format yyyy-MM 
-              #after midnight date might change so just look for year and month pattern
-              foreach($line in $opa){if(($line|ConvertFrom-Json).msg -like "*starting update constraints loop*"){$line}}
+              $json = (kubectl get constraints -o yaml) | ConvertFrom-Yaml | ConvertTo-Json -Depth 100 | ConvertFrom-Json
 
-              $Vulnerabilities = ($json | ConvertFrom-Json | select vulnerabilities).Vulnerabilities
-              .\.github\workflows\scripts\GenHTMLReport.ps1 -K8S_NAME $env:DEV_K8S_NAME -vulnerabilities $Vulnerabilities -htmlReportName "opa_gatekeeper_reports.html"
+              .\.github\workflows\scripts\GenOPAHTMLReport.ps1 -K8S_NAME $env:DEV_K8S_NAME -json $json -htmlReportName "$env:HTML_REPORT_NAME"
               
       - name: Publish JSON reports to Slack
         run: |
@@ -56,8 +49,8 @@ jobs:
                 $Key = $ENV:REPORTS_STORAGE_KEY
                 $SAContext = New-AzureStorageContext -StorageAccountName "$env:STORAGE_ACCOUNT_NAME" -StorageAccountKey "$Key"
                 $containerName = "reports"
-                $blobName = "$env:DEV_K8S_NAME/opa_gatekeeper_reports.html"
-                $destinationFileName = "opa_gatekeeper_reports.html"
+                $blobName = "$env:DEV_K8S_NAME/$env:HTML_REPORT_NAME"
+                $destinationFileName = "$env:HTML_REPORT_NAME"
                 Set-AzureStorageBlobContent -Container "$containerName" -File "$destinationFileName" `
                 -Blob "$blobName" -Force  -Context $SAContext
                 Start-Sleep -S 60
