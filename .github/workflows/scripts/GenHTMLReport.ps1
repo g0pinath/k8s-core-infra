@@ -1,5 +1,5 @@
 ﻿        
-Param($K8S_NAME, $vulnerabilities)
+Param($K8S_NAME, $vulnerabilities, $htmlReportName)
 
 $ReportTime = Get-Date -Format "dd-MM-yyyy - hh:mm tt"
 
@@ -86,9 +86,9 @@ $HTMLTitleoutput = HTMLHeader4Reports  $HeadingofReport
 $ColumnNameOutput = TableHeader4Reports "Category" "Severity" "vulnerability" "description" "evidence" "avd_reference" "vid"
 #Create report file
 
-New-Item -ItemType File -Name "kube_hunter_reports.html" -Force
-Add-Content kube_hunter_reports.html $HTMLTitleoutput # this is thoe first row of the report containing the Title
-Add-Content kube_hunter_reports.html $ColumnNameOutput # this is the second row of the report containing the headers
+New-Item -ItemType File -Name "$htmlReportName" -Force
+Add-Content $htmlReportName $HTMLTitleoutput # this is thoe first row of the report containing the Title
+Add-Content $htmlReportName $ColumnNameOutput # this is the second row of the report containing the headers
 
 Foreach($item in $vulnerabilities)
 {    
@@ -123,14 +123,14 @@ Foreach($item in $vulnerabilities)
              <td width='10%' bgcolor=`'$whitecolor`'  align='center'>$vid</td>        
              </tr>
              "
-        Add-Content kube_hunter_reports.html $dataRow 
+        Add-Content $htmlReportName $dataRow 
         $BGColor1=''
  }    
      
 }
 
 GenerateHTMLReport  $csv
-$body = Get-Content kube_hunter_reports.html -Raw
+$body = Get-Content $htmlReportName -Raw
 
 $emailAddresses = $ENV:EMAIL_TO
 $emailAddresses = $emailAddresses -split ","
