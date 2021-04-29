@@ -15,7 +15,7 @@ on:
     - cron: "0 13 * * *"  
 
 jobs:
-  DefectDojo-Report:
+  Publish-KubeBench-Report-2DefectDojo:
     runs-on: windows-latest  # For a list of available runner types, refer to  # https://help.github.com/en/actions/reference/workflow-syntax-for-github-actions#jobsjob_idruns-on
     #needs: MRS-Dev-PreValidation
     steps:

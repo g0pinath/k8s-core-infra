@@ -33,6 +33,8 @@ jobs:
 #Export the opa-gatekeeper pod logs to json.                          
       - name: Kubectl logs <opa-gatekeeper-pod> && Dump it to JSON
         run: |
+              Install-Module powershell-yaml
+              Import-Module powershell-yaml
               az account set -s $env:DEV_ARM_SUBSCRIPTION_ID 
               az aks Get-Credentials -g $env:DEV_K8S_RG_NAME  -n $env:DEV_K8S_NAME --overwrite-existing --admin
               #find the pod name
