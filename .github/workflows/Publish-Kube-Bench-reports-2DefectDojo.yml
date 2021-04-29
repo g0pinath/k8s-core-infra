@@ -26,7 +26,7 @@ jobs:
         run: |
                 #To fetch the tokens
                 $headers = @{
-                    'username' = $env:DD_Admin_User; 'password' = $env:DD_Admin_Password
+                    'username' = $env:DD_Admin_User; 'password' = $env:DD_ADMIN_PWD
                 }
                 $baseURL="https://az-defectdojo-dev.cloudkube.xyz"  
                 $TokenRaw = Invoke-WebRequest -Uri https://az-defectdojo-dev.cloudkube.xyz/api/v2/api-token-auth/ -Method 'POST'  -Body $headers

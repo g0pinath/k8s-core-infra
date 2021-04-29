@@ -1,14 +1,5 @@
 param($product_name, $active="true", $baseURL)
 
-#leave it at https if its TLS enabled. Dont expect redirection to work.
-$headers = @{
-                  'username' = $env:DD_Admin_User; 'password' = $env:DD_ADMIN_PWD
-              }
-#Fetch tokens using creds
-$TokenRaw = Invoke-WebRequest -Uri $baseURL/api/v2/api-token-auth/ -Method 'POST'  -Body $headers
-$Token = ($TokenRaw | ConvertFrom-Json).Token
-$env:DEFECTDOJO_API_TOKEN = $Token
-
 $headers = @{
     'Authorization' = "Token $env:DEFECTDOJO_API_TOKEN"
             }
