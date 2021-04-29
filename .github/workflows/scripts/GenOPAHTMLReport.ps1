@@ -95,7 +95,7 @@ Foreach($item in $json.items)
         
         
         $constraintName = $item.metadata.name
-        
+        $violatingObjects=''
         $numberOfViolations = $item.status.totalviolations
         if($numberOfViolations -eq 0){$isViolated = "FALSE"} else {$isViolated ="TRUE"}
         $violatingObjectsArr = $item.status.violations | select Name,Kind
