@@ -66,9 +66,17 @@ jobs:
         run: |
                 $LatestReportFile = "kube-bench.json"
                 $baseURL="https://az-defectdojo-dev.cloudkube.xyz" 
+                #To fetch the tokens
+                $headers = @{
+                    'username' = $env:DD_Admin_User; 'password' = $env:DD_ADMIN_PWD
+                }
+                $baseURL="https://az-defectdojo-dev.cloudkube.xyz"  
+                $TokenRaw = Invoke-WebRequest -Uri https://az-defectdojo-dev.cloudkube.xyz/api/v2/api-token-auth/ -Method 'POST'  -Body $headers
+                $Token = ($TokenRaw | ConvertFrom-Json).Token
+                $env:DEFECTDOJO_API_TOKEN = $Token
                 
                 $env:Product_Name = "kube-bench"
-                #.\devsecops\Scripts\CloseOpenFindings.ps1 -product_name $env:Product_Name -active "true" -baseURL $baseURL
+                .\devsecops\Scripts\CloseOpenFindings.ps1 -product_name $env:Product_Name -active "true" -baseURL $baseURL
                 .\devsecops\Scripts\PosttoDefectDojo.ps1 -tags "kube-bench" -scan_type "kube-bench Scan" -engagement $env:Kube_Bench_Engagement_Name `
                 -close_old_findings $true -skip_duplicates $true -baseURL $baseURL `
                 -multipartFile "$pwd\devsecops\Scripts\$LatestReportFile" -file_name 'kube-bench.json'                            
