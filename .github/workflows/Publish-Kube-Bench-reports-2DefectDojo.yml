@@ -6,7 +6,7 @@ env:
   DEV_K8S_KV_NAME: "KV-MET-DEV-K8S01" 
   DEV_K8S_NAME: "metaks-np-ae"
   DD_Admin_User: admin
-  DD_Admin_Password: ${{ secrets.DEV_DD_ADMIN_PWD }}
+  DD_ADMIN_PWD: ${{ secrets.DEV_DD_ADMIN_PWD }}
 on:
   workflow_dispatch:  
   #push:
