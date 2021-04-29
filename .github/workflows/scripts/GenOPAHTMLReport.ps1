@@ -83,24 +83,31 @@ $whiteColor = "#FFFFFF"
 [string]$HeadingofReport="Kube-Hunter Vulnerability Report for $K8S_NAME - $ReportTime"
 
 $HTMLTitleoutput = HTMLHeader4Reports  $HeadingofReport
-$ColumnNameOutput = TableHeader4Reports "Category" "Severity" "vulnerability" "description" "evidence" "avd_reference" "vid"
+$ColumnNameOutput = TableHeader4Reports "constraintName" "isViolated" "numberOfViolations" "violatingObjects(type)" "policyEnforcementType"
 #Create report file
 
 New-Item -ItemType File -Name "$htmlReportName" -Force
 Add-Content $htmlReportName $HTMLTitleoutput # this is thoe first row of the report containing the Title
 Add-Content $htmlReportName $ColumnNameOutput # this is the second row of the report containing the headers
 
-Foreach($item in $vulnerabilities)
+Foreach($item in $json.items)
 {    
         
         
-        $Category = $item.Category
-        $Severity = $item.Severity
-        $vulnerability= $item.vulnerability
-        $description = $item.description
-        $evidence = $item.evidence
-        $avd_reference = $item.avd_reference
-        $vid = $item.vid
+        $constraintName = $item.metadata.name
+        
+        $numberOfViolations = $item.status.totalviolations
+        if($numberOfViolations -eq 0){$isViolated = "FALSE"} else {$isViolated ="TRUE"}
+        $violatingObjectsArr = $item.status.violations | select Name,Kind
+        Foreach($entry in $violatingObjectsArr)
+        {
+            $objName = $entry.Name
+            $objKind = $entry.Kind
+            [string]$violatingObjects+=$objName + "($objKind);"
+        }
+        
+        $policyEnforcementType = ($item.metadata.annotations.'kubectl.kubernetes.io/last-applied-configuration' | ConvertFrom-Json -Depth 10 | select-object spec).spec.enforcementaction
+        
 
         if($Severity -eq "medium")
         {
@@ -114,13 +121,11 @@ Foreach($item in $vulnerabilities)
         $dataRow = "
              <tr>
 
-             <td width='10%' bgcolor=`'$BGColor1`'  align='center'>$Category</td>
-             <td width='10%' bgcolor=`'$BGColor1`'  align='center'>$Severity</td>    
-             <td width='10%' bgcolor=`'$whitecolor`'  align='center'>$vulnerability</td>     
-             <td width='10%' bgcolor=`'$whitecolor`'  align='center'>$description</td>  
-             <td width='10%' bgcolor=`'$whitecolor`'  align='center'>$evidence</td>        
-             <td width='10%' bgcolor=`'$whitecolor`'  align='center'>$avd_reference</td>        
-             <td width='10%' bgcolor=`'$whitecolor`'  align='center'>$vid</td>        
+             <td width='10%' bgcolor=`'$BGColor1`'  align='center'>$constraintName</td>
+             <td width='10%' bgcolor=`'$BGColor1`'  align='center'>$isViolated</td>    
+             <td width='10%' bgcolor=`'$whitecolor`'  align='center'>$numberOfViolations</td>     
+             <td width='10%' bgcolor=`'$whitecolor`'  align='center'>$violatingObjects</td>  
+             <td width='10%' bgcolor=`'$whitecolor`'  align='center'>$policyEnforcementType</td>        
              </tr>
              "
         Add-Content $htmlReportName $dataRow 
