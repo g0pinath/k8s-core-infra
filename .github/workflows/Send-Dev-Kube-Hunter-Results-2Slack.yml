@@ -39,16 +39,13 @@ jobs:
               $kube_hunter_pod_name = ($podsjson.items | where {$_.metadata.name -like "*kube-hunter*" -and $_.status.phase -like "*Succeeded*"}).metadata.name
               Write-Output "Pod name is -- $kube_hunter_pod_name"
               $logs = kubectl logs $kube_hunter_pod_name  -n devops-addons  
-              Write-Output "--------------------------------"
-              Write-Output "Logs -- $logs"
-              Write-Output "--------------------------------"
+              
               $date = Get-Date -Format yyyy-MM 
               #after midnight date might change so just look for year and month pattern
               foreach($line in $logs){if($line -notlike "*$date*"){$json+=$line}}
-              Write-Output "Printing JSON -- $json"
-              Write-Output "--------------------------------"
-              #$Vulnerabilities = ($json | ConvertFrom-Json | select vulnerabilities).Vulnerabilities
-              #.\.github\workflows\scripts\GenHTMLReport.ps1 -K8S_NAME $env:DEV_K8S_NAME -vulnerabilities $Vulnerabilities
+              
+              $Vulnerabilities = ($json | ConvertFrom-Json | select vulnerabilities).Vulnerabilities
+              .\.github\workflows\scripts\GenHTMLReport.ps1 -K8S_NAME $env:DEV_K8S_NAME -vulnerabilities $Vulnerabilities
               
       - name: Publish JSON reports to Slack
         run: |
