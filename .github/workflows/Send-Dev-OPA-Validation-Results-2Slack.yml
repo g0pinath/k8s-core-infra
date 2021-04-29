@@ -12,8 +12,8 @@ env:
 
 on:
   workflow_dispatch:  
-  push:
-    branches: [ develop ]   
+  #push:
+  #  branches: [ develop ]   
   schedule:
     - cron: "0 13 * * *"  
 
