@@ -18,11 +18,14 @@ variable "afd_properties" {
       afd_name = string
       dd_backend_address = string
       grafana_backend_address = string
+      techapp_backend_address = string
       dd_backend_address_host_header     = string
       grafana_backend_address_host_header =  string
+      techapp_backend_address_host_header =  string
       afd_default_host_header =  string
       dd_host_header = string
       grafana_host_header =  string
+      techapp_host_header =  string
       
       
   })
@@ -31,14 +34,19 @@ variable "afd_properties" {
       afd_name = "cloudkube-dev"
       dd_backend_address = "az-defectdojo-dev.cloudkube.xyz"
       grafana_backend_address     = "az-grafana-dev.cloudkube.xyz"
+      techapp_backend_address     = "az-apptio-dev.cloudkube.xyz"
+
       dd_backend_address_host_header =  "az-defectdojo-dev.cloudkube.xyz"
       grafana_backend_address_host_header =  "az-grafana-dev.cloudkube.xyz"
+      techapp_backend_address_host_header =  "az-apptio-dev.cloudkube.xyz"
+
       afd_default_host_header = "cloudkube-dev.azurefd.net" 
       dd_host_header = "defectdojo-dev.cloudkube.xyz"
       grafana_host_header =  "grafana-dev.cloudkube.xyz"
-
+      techapp_host_header = "apptio-dev.cloudkube.xyz"
       
     }
+### The backend address must match the Ingress URL deployed via helm
 #For example, if I need to host defectdojo.cloudkube.xyz on Azure Front Door, and the name of the Azure front door is cloudkube
 #then I need to publish a CNAME record pointing defectdojo.cloudkube.xyz to cloudkube.azurefd.net
 
@@ -67,7 +75,8 @@ variable "tenant_id" {
 
 
 variable "OMSLogging" {
-  default = false
+  default = true
+  type = bool
 }
 
 variable "rg_group_name" {
@@ -84,7 +93,7 @@ variable "acr_properties" {
 }
 
 variable "la_name" {
-  default = "az-aks-devsec02"
+  default = "la01-k8s01-aks-dev"
 }
 
 variable "la_properties" {
@@ -139,7 +148,7 @@ variable "k8s_properties" {
       
       
       dns_prefix = "aks-np-ae"
-      enable_kube_dashboard = true
+      enable_kube_dashboard = false
       sys_nodepool_name = "sysnodepool"
       sys_pool_size     = "Standard_A2m_v2"
       sys_pool_min_count =  1
@@ -148,7 +157,7 @@ variable "k8s_properties" {
       apppool01_name = "apppool01"
       apppool01_size     = "Standard_A2m_v2"
       apppool01_min_count =  1
-      apppool01_max_count =  4
+      apppool01_max_count =  10
       apppool01_priority  = "Spot"
       apppool01_eviction_policy = "Delete"
       apppool01_spot_max_price = "-1"

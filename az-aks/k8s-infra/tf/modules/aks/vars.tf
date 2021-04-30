@@ -81,7 +81,8 @@ variable "k8s_properties" {
 }
 
 variable "OMSLogging" {
-  default = ""
+  default = true
+  type = bool
 }
 
 variable "enable_azure_policy" {}

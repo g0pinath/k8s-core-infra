@@ -1,0 +1,79 @@
+name: Send-Kube-Hunter-Results-2Slack
+env:
+  DEV_ARM_SUBSCRIPTION_ID: ${{ secrets.DEV_ARM_SUBSCRIPTION_ID }} # MSDN "6f481927-b09b-4d4c-8329-27751073cfd2" #${{ secrets.DEV_ARM_SUBSCRIPTION_ID }} 
+  DEV_K8S_RG_NAME:  "RG-DEV-K8S-CLUSTER" 
+  DEV_K8S_KV_NAME: ${{ secrets.DEV_K8S_KV_NAME }} # MSDN "KV-MET-DEV-K8S01" 
+  DEV_K8S_NAME: ${{ secrets.DEV_K8S_NAME }} # MSDN "metaks-np-ae"
+  REPORTS_STORAGE_KEY: ${{ secrets.DEV_REPORTS_STORAGE_KEY }}
+  STORAGE_ACCOUNT_NAME: "azaksmetdevtf01"
+  #HTML reports are uploaded to this storage account 
+  SLACK_CHANNEL_TOKEN: ${{ secrets.SLACK_CHANNEL_TOKEN }}
+  HTML_REPORT_NAME: "kube_hunter_reports.html"
+
+on:
+  workflow_dispatch:  
+  #push:
+  #  branches: [ develop ]   
+  #schedule:
+    - cron: "0 13 * * *"  
+
+jobs:
+  Send-KubeHunter-Report-2Slack:
+    runs-on: windows-latest  # For a list of available runner types, refer to  # https://help.github.com/en/actions/reference/workflow-syntax-for-github-actions#jobsjob_idruns-on
+    #needs: MRS-Dev-PreValidation
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Login via Az module
+        uses: azure/login@v1
+        with:
+          creds: ${{secrets.DEV_AZURE_CREDENTIALS}}
+          enable-AzPSSession: true 
+#Export the kube-hunter pod logs to json.                          
+      - name: Kubectl logs <kube-hunter-pod> && Dump it to JSON
+        run: |
+              az account set -s $env:DEV_ARM_SUBSCRIPTION_ID 
+              az aks Get-Credentials -g $env:DEV_K8S_RG_NAME  -n $env:DEV_K8S_NAME --overwrite-existing --admin
+              #find the pod name
+              $podsjson = kubectl get pods -n devops-addons -o json | convertfrom-json
+              $kube_hunter_pod_name = ($podsjson.items | where {$_.metadata.name -like "*kube-hunter*" -and $_.status.phase -like "*Succeeded*"}).metadata.name
+              Write-Output "Pod name is -- $kube_hunter_pod_name"
+              $logs = kubectl logs $kube_hunter_pod_name  -n devops-addons  
+              
+              $date = Get-Date -Format yyyy-MM 
+              #after midnight date might change so just look for year and month pattern
+              foreach($line in $logs){if($line -notlike "*$date*"){$json+=$line}}
+              
+              $Vulnerabilities = ($json | ConvertFrom-Json | select vulnerabilities).Vulnerabilities
+              .\.github\workflows\scripts\GenKubeHunterHTMLReport.ps1 -K8S_NAME $env:DEV_K8S_NAME -vulnerabilities $Vulnerabilities -htmlReportName "$env:HTML_REPORT_NAME"
+              
+      - name: Publish JSON reports to Slack
+        run: |
+                #send to slack -- Slack needs the file stored somewhere and in this case we are using Azure Blob storage.
+                #Windows-latest runner has issues with Az module or we can use new-azcurrentstorageaccount without keys.
+                Set-PSRepository -Name PSGallery -InstallationPolicy Trusted          
+                Import-Module Azure.Storage
+                $Key = $ENV:REPORTS_STORAGE_KEY
+                $SAContext = New-AzureStorageContext -StorageAccountName "$env:STORAGE_ACCOUNT_NAME" -StorageAccountKey "$Key"
+                $containerName = "reports"
+                $blobName = "$env:DEV_K8S_NAME/$env:HTML_REPORT_NAME"
+                $destinationFileName = "$env:HTML_REPORT_NAME"
+                Set-AzureStorageBlobContent -Container "$containerName" -File "$destinationFileName" `
+                -Blob "$blobName" -Force  -Context $SAContext
+                Start-Sleep -S 60
+                $StartTime = Get-Date 
+                $EndTime = (Get-Date).AddHours(24)
+                $sasToken = New-AzureStorageBlobSASToken -Container $containerName -Blob $blobName  -Context $SAContext -Permission rl -StartTime $StartTime -ExpiryTime $EndTime
+                $URL = "https://"+ "$env:STORAGE_ACCOUNT_NAME" + ".blob.core.windows.net/" + $containerName + "/" + $blobName + $sasToken
+                
+                Install-Module PSSlack
+                Import-Module PSSlack
+                $SLACK_CHANNEL_TOKEN = $env:SLACK_CHANNEL_TOKEN
+                $att = New-SlackMessageAttachment -Color $_PSSlackColorMap.green `
+                                    -Title 'Click here to download kube-hunter vulnerability' `
+                                    -TitleLink $url `
+                                    -Pretext 'kube-hunter vulnerability report' `
+                                    -Fallback 'IIS and Website validation reports' 
+                Send-SlackMessage -Uri $SLACK_CHANNEL_TOKEN -Attachments $att 
+                

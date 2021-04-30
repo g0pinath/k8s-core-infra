@@ -11,13 +11,7 @@ Function FindEngagementIDFromName($engagement, $baseURL)
 }
 #Fetch the token
 $Uri = "$baseURL/api/v2/import-scan/"
-$headers = @{
-                  'username' = $env:DD_Admin_User; 'password' = $env:DD_Admin_Password
-              }
 
-$TokenRaw = Invoke-WebRequest -Uri $baseURL/api/v2/api-token-auth/ -Method 'POST'  -Body $headers
-$Token = ($TokenRaw | ConvertFrom-Json).Token
-$env:DEFECTDOJO_API_TOKEN = $Token
 #Set headers using token.
 $headers = @{
     'Authorization' = "Token $env:DEFECTDOJO_API_TOKEN"

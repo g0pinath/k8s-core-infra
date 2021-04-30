@@ -385,7 +385,7 @@ Function CreateADPrincipalandCheckinCredstoKV($SPN_DP_TO_CHECK, $K8S_KV_NAME, $a
 Function CreateAppsSPN($k8sEnvironment, $appName, $cloudProvider, $dryRunforGithubActions)
 {
   #Login URL for DD must have suffix /complete/azuread-tenant-oauth2/ -- https://defectdojo.readthedocs.io/en/latest/social-authentication.html
-  Write-host "CreateAppsSPN called for $appname"
+  
   if($appName -eq "DEFECTDOJO")
   {
     $DEV_DD_LOGIN_URL_PREFIX = "https://" + $cloudProvider + "-" + $appName.tolower() + "-" + "dev."
@@ -554,7 +554,7 @@ Function CreateStorageAccountforTF($k8sEnvironment)
   
   
 }
-Function BuildK8STFInfra($K8SMonitoringType, $k8sEnvironment, $IngressController, $enable_azure_policy)
+Function BuildK8STFInfra($K8SLogMonitoringType, $k8sEnvironment, $IngressController, $enable_azure_policy, $applyTFTemplates)
 {
   switch($k8sEnvironment)
   {
@@ -571,10 +571,11 @@ Function BuildK8STFInfra($K8SMonitoringType, $k8sEnvironment, $IngressController
       $secretInPlainText = $secret.SecretValue | ConvertFrom-SecureString -AsPlainText
       $env:ARM_CLIENT_SECRET = $secretInPlainText
       $env:ARM_SUBSCRIPTION_ID = $env:DEV_ARM_SUBSCRIPTION_ID
-        
-          if($K8SMonitoringType -eq "OMS")
+      $env:TF_STORAGE_NAME = $env:DEV_TF_STORAGE_NAME
+      $env:K8S_RG_NAME=$env:DEV_K8S_RG_NAME  
+          if($K8SLogMonitoringType -eq "OMS")
           {
-            
+            Write-Output "Entering OMS"
             terragrunt init
             terragrunt plan  --var OMSLogging=true `
                         --var client_id=$env:ARM_CLIENT_ID --var client_secret=$env:ARM_CLIENT_SECRET `
@@ -582,13 +583,15 @@ Function BuildK8STFInfra($K8SMonitoringType, $k8sEnvironment, $IngressController
                         --var rg_group_name=$env:DEV_K8S_RG_NAME --var enable_azure_policy=$enable_azure_policy `
                         --var IngressController=$IngressController --var requireAzureFrontDoor=$requireAzureFrontDoor `
                         --var la_name=$env:DEV_LA_NAME  --var k8s_name=$env:DEV_K8S_NAME
-
+            if($applyTFTemplates -eq "true")
+            {
             terragrunt apply --auto-approve  --var OMSLogging=true `
                         --var client_id=$env:ARM_CLIENT_ID --var client_secret=$env:ARM_CLIENT_SECRET `
                         --var subscription_id=$env:ARM_SUBSCRIPTION_ID --var tenant_id=$env:ARM_TENANT_ID `
                         --var rg_group_name=$env:DEV_K8S_RG_NAME --var enable_azure_policy=$enable_azure_policy `
                         --var IngressController=$IngressController --var requireAzureFrontDoor=$requireAzureFrontDoor  `
                         --var la_name=$env:DEV_LA_NAME  --var k8s_name=$env:DEV_K8S_NAME
+            }
           }
           else 
           {
@@ -600,13 +603,15 @@ Function BuildK8STFInfra($K8SMonitoringType, $k8sEnvironment, $IngressController
                         --var rg_group_name=$env:DEV_K8S_RG_NAME --var enable_azure_policy=$enable_azure_policy `
                         --var IngressController=$IngressController --var requireAzureFrontDoor=$requireAzureFrontDoor `
                         --var la_name=$env:DEV_LA_NAME  --var k8s_name=$env:DEV_K8S_NAME
-            
+            if($applyTFTemplates -eq "true")
+            {
             terragrunt apply --auto-approve  --var OMSLogging=false `
                         --var client_id=$env:ARM_CLIENT_ID --var client_secret=$env:ARM_CLIENT_SECRET `
                         --var subscription_id=$env:ARM_SUBSCRIPTION_ID --var tenant_id=$env:ARM_TENANT_ID `
                         --var rg_group_name=$env:DEV_K8S_RG_NAME --var enable_azure_policy=$enable_azure_policy `
                         --var IngressController=$IngressController --var requireAzureFrontDoor=$requireAzureFrontDoor `
                         --var la_name=$env:DEV_LA_NAME  --var k8s_name=$env:DEV_K8S_NAME
+            }
           }
     }
     "PRD-A"
@@ -622,8 +627,10 @@ Function BuildK8STFInfra($K8SMonitoringType, $k8sEnvironment, $IngressController
       $secret = Get-AzKeyVaultSecret -VaultName $env:PRD_A_K8S_KV_NAME -Name "PRD-ARM-CLIENT-SECRET"
       $secretInPlainText = $secret.SecretValue | ConvertFrom-SecureString -AsPlainText
       $env:ARM_CLIENT_SECRET = $secretInPlainText
+      $env:TF_STORAGE_NAME = $env:PRD_A_TF_STORAGE_NAME
+      $env:K8S_RG_NAME=$env:PRD_A_K8S_RG_NAME
       
-      if($K8SMonitoringType -eq "OMS")
+      if($K8SLogMonitoringType -eq "OMS")
           {
             terragrunt init
             terragrunt plan  --var OMSLogging=true `
@@ -633,13 +640,15 @@ Function BuildK8STFInfra($K8SMonitoringType, $k8sEnvironment, $IngressController
                         --var IngressController=$IngressController --var requireAzureFrontDoor=$requireAzureFrontDoor `
                         --var la_name=$env:PRD_A_LA_NAME  --var prd_a_k8s_name=$env:PRD_A_K8S_NAME
 
-            
+            if($applyTFTemplates -eq "true")
+            {            
             terragrunt apply --auto-approve  --var OMSLogging=true `
                         --var client_id=$env:ARM_CLIENT_ID --var client_secret=$env:ARM_CLIENT_SECRET `
                         --var subscription_id=$env:ARM_SUBSCRIPTION_ID --var tenant_id=$env:ARM_TENANT_ID `
                         --var rg_group_name=$env:PRD_A_K8S_RG_NAME  --var enable_azure_policy=$enable_azure_policy `
                         --var IngressController=$IngressController --var requireAzureFrontDoor=$requireAzureFrontDoor `
-                        --var la_name=$env:PRD_A_LA_NAME  --var prd_a_k8s_name=$env:PRD_A_K8S_NAME                        
+                        --var la_name=$env:PRD_A_LA_NAME  --var prd_a_k8s_name=$env:PRD_A_K8S_NAME   
+            }                     
           }
           else 
           {
@@ -651,13 +660,15 @@ Function BuildK8STFInfra($K8SMonitoringType, $k8sEnvironment, $IngressController
                         --var IngressController=$IngressController --var requireAzureFrontDoor=$requireAzureFrontDoor `
                         --var la_name=$env:PRD_A_LA_NAME  --var prd_a_k8s_name=$env:PRD_A_K8S_NAME
 
-            
+            if($applyTFTemplates -eq "true")
+            {
             terragrunt apply --auto-approve  --var OMSLogging=false `
                         --var client_id=$env:ARM_CLIENT_ID --var client_secret=$env:ARM_CLIENT_SECRET `
                         --var subscription_id=$env:ARM_SUBSCRIPTION_ID --var tenant_id=$env:ARM_TENANT_ID `
                         --var rg_group_name=$env:PRD_A_K8S_RG_NAME  --var enable_azure_policy=$enable_azure_policy `
                         --var IngressController=$IngressController --var requireAzureFrontDoor=$requireAzureFrontDoor `
                         --var la_name=$env:PRD_A_LA_NAME  --var prd_a_k8s_name=$env:PRD_A_K8S_NAME
+            }
           }
   
     }
@@ -674,8 +685,10 @@ Function BuildK8STFInfra($K8SMonitoringType, $k8sEnvironment, $IngressController
       $secret = Get-AzKeyVaultSecret -VaultName $env:PRD_B_K8S_KV_NAME -Name "PRD-ARM-CLIENT-SECRET"
       $secretInPlainText = $secret.SecretValue | ConvertFrom-SecureString -AsPlainText
       $env:ARM_CLIENT_SECRET = $secretInPlainText
+      $env:TF_STORAGE_NAME = $env:PRD_B_TF_STORAGE_NAME
+      $env:K8S_RG_NAME=$env:PRD_B_K8S_RG_NAME
       
-      if($K8SMonitoringType -eq "OMS")
+      if($K8SLogMonitoringType -eq "OMS")
           {
                  terragrunt init
             terragrunt plan  --var OMSLogging=true `
@@ -685,13 +698,15 @@ Function BuildK8STFInfra($K8SMonitoringType, $k8sEnvironment, $IngressController
                         --var IngressController=$IngressController --var requireAzureFrontDoor=$requireAzureFrontDoor `
                         --var prd_b_la_name=$env:PRD_B_LA_NAME  --var prd_b_k8s_name=$env:PRD_B_K8S_NAME
 
-            
+            if($applyTFTemplates -eq "true")
+            {
             terragrunt apply --auto-approve  --var OMSLogging=true `
                         --var client_id=$env:ARM_CLIENT_ID --var client_secret=$env:ARM_CLIENT_SECRET `
                         --var subscription_id=$env:ARM_SUBSCRIPTION_ID --var tenant_id=$env:ARM_TENANT_ID `
                         --var prd_b_rg_group_name=$env:PRD_B_K8S_RG_NAME `
                         --var IngressController=$IngressController --var requireAzureFrontDoor=$requireAzureFrontDoor `
-                        --var prd_b_la_name=$env:PRD_B_LA_NAME  --var prd_b_k8s_name=$env:PRD_B_K8S_NAME                        
+                        --var prd_b_la_name=$env:PRD_B_LA_NAME  --var prd_b_k8s_name=$env:PRD_B_K8S_NAME    
+            }                    
           }
           else 
           {
@@ -703,13 +718,15 @@ Function BuildK8STFInfra($K8SMonitoringType, $k8sEnvironment, $IngressController
                         --var IngressController=$IngressController --var requireAzureFrontDoor=$requireAzureFrontDoor `
                         --var prd_b_la_name=$env:PRD_B_LA_NAME  --var prd_b_k8s_name=$env:PRD_B_K8S_NAME
 
-            
+            if($applyTFTemplates -eq "true")
+            {
             terragrunt apply --auto-approve  --var OMSLogging=false `
                         --var client_id=$env:ARM_CLIENT_ID --var client_secret=$env:ARM_CLIENT_SECRET `
                         --var subscription_id=$env:ARM_SUBSCRIPTION_ID --var tenant_id=$env:ARM_TENANT_ID `
                         --var prd_b_rg_group_name=$env:PRD_B_K8S_RG_NAME `
                         --var IngressController=$IngressController --var requireAzureFrontDoor=$requireAzureFrontDoor `
                         --var prd_b_la_name=$env:PRD_B_LA_NAME  --var prd_b_k8s_name=$env:PRD_B_K8S_NAME
+            }
           }
   
     }
@@ -773,13 +790,14 @@ Function ApplyK8SCoreTemplates($k8sEnvironment, $Policies)
   {
     $FolderName = "$k8sEnvironment"
   }
-  cd .\az-aks\k8s-yml-templates\core
+  cd ./az-aks/k8s-yml-templates/core
   #Create Namespaces, RBAC and other core components.
   kubectl apply -f $FolderName/namespaces.yaml
   kubectl apply -f $FolderName/service-accounts.yml
   kubectl apply -f $FolderName/.
   cd ../../..
-  
+  #Apply OMS config map - if OMS isnt used, there is no significance for this configmap.
+  kubectl apply -f  ./az-aks/k8s-yml-templates/core/container-azm-ms-agentconfig-v2.yml
   #To reboot the patched nodes on a schedule. 
   kubectl apply -f ./az-aks/k8s-yml-templates/add-ons/.
   #DEV_TLS_PRIVATE_KEY | PRD_TLS_PRIVATE_KEY is a secret stored in Git. Te generate the value for this variable use the steps below
@@ -793,12 +811,12 @@ Function ApplyK8SCoreTemplates($k8sEnvironment, $Policies)
   {
     if($k8sEnvironment -eq "DEV")
     {
-       [IO.File]::WriteAllBytes("$pwd\certs\stardotcloudkubexyz.key", [Convert]::FromBase64String($ENV:DEV_TLS_PRIVATE_KEY))
+       [IO.File]::WriteAllBytes("$pwd/certs/stardotcloudkubexyz.key", [Convert]::FromBase64String($ENV:DEV_TLS_PRIVATE_KEY))
        $ENV:DEV_TLS_PRIVATE_KEY
     }
     else
     {
-      [IO.File]::WriteAllBytes("$pwd\certs\stardotcloudkubexyz.key", [Convert]::FromBase64String($ENV:PRD_TLS_PRIVATE_KEY))
+      [IO.File]::WriteAllBytes("$pwd/certs/stardotcloudkubexyz.key", [Convert]::FromBase64String($ENV:PRD_TLS_PRIVATE_KEY))
     }
     kubectl delete secret tls ingress-secret-tls  -n dev 
     kubectl delete secret tls ingress-secret-tls  -n devops-addons
@@ -813,9 +831,9 @@ Function ApplyK8SCoreTemplates($k8sEnvironment, $Policies)
     if($Policies -eq "DIY-GateKeeper")
     {
       kubectl apply -f https://raw.githubusercontent.com/open-policy-agent/gatekeeper/master/deploy/gatekeeper.yaml
-      kubectl apply -f .\devsecops\k8s-templates\opa-gatekeeper\baseline-templates\.
+      kubectl apply -f ./devsecops/k8s-templates/opa-gatekeeper/baseline-templates/.
       start-sleep -s 60 # wait for a moment before the templates are available for constraints
-      kubectl apply -f .\devsecops\k8s-templates\opa-gatekeeper\baseline-constraints\.
+      kubectl apply -f ./devsecops/k8s-templates/opa-gatekeeper/baseline-constraints/.
     }
   }
 }
@@ -841,6 +859,7 @@ Function InstallAZProviders()
     Register-AzResourceProvider -ProviderNamespace Microsoft.ContainerRegistry
     Register-AzResourceProvider -ProviderNamespace microsoft.insights
     Register-AzResourceProvider -ProviderNamespace Microsoft.OperationalInsights
+    Register-AzResourceProvider -ProviderNamespace Microsoft.OperationsManagement
 
     # Feature register: enables installing the add-on
     Register-AzResourceProvider -ProviderNamespace  Microsoft.ContainerService # --name K8S-AzurePolicyAutoApprove
@@ -918,11 +937,11 @@ Function SetupK8SLogging($K8SLogMonitoringType, $cloudProvider, $K8S_RG_NAME)
       {
         "EFKinCluster"
         {
-              # kubectl apply -f .\k8s-yml-templates\efk-logging\. # dont apply all at once, wait for ES to be present and then deploy kibana
-            kubectl apply -f .\k8s-yml-templates\efk-logging\$K8SLogMonitoringType\elastic\elastic-statefulset-$cloudProvider.yml
-            kubectl apply -f .\k8s-yml-templates\efk-logging\$K8SLogMonitoringType\elastic\elastic-svc.yml
+              # kubectl apply -f ./k8s-yml-templates/efk-logging/. # dont apply all at once, wait for ES to be present and then deploy kibana
+            kubectl apply -f ./k8s-yml-templates/efk-logging/$K8SLogMonitoringType/elastic/elastic-statefulset-$cloudProvider.yml
+            kubectl apply -f ./k8s-yml-templates/efk-logging/$K8SLogMonitoringType/elastic/elastic-svc.yml
             
-            kubectl apply -f .\k8s-yml-templates\efk-logging\$K8SLogMonitoringType\fluent\.
+            kubectl apply -f ./k8s-yml-templates/efk-logging/$K8SLogMonitoringType/fluent/.
             $esCount = (kubectl get pods | select-string "es-cluster" | Measure).Count
             $timeWaited=0
             #dont install kibana before ES is up and running.
@@ -933,18 +952,18 @@ Function SetupK8SLogging($K8SLogMonitoringType, $cloudProvider, $K8S_RG_NAME)
               $timeWaited+=1
             }while($esCount -ne 3 -and $timeWaited -lt 300)
             Start-Sleep -s 180 #wait for the 3rd ES cluster pod to be online.
-            kubectl apply -f .\k8s-yml-templates\efk-logging\$K8SLogMonitoringType\kibana\.
+            kubectl apply -f ./k8s-yml-templates/efk-logging/$K8SLogMonitoringType/kibana/.
         }
         "ElasticInCloud"
         {
-            kubectl apply -f .\k8s-yml-templates\efk-logging\$K8SLogMonitoringType\fluent\.
+            kubectl apply -f ./k8s-yml-templates/efk-logging/$K8SLogMonitoringType/fluent/.
         }
         "FluentBitAzLogAnalytics"
         {
           $la_id = (az monitor log-analytics workspace list -g $K8S_RG_NAME | Convertfrom-Json | select customerid).customerid
           $la_key = (az monitor log-analytics workspace get-shared-keys --resource-group  $K8S_RG_NAME  -n $LA_NAME | ConvertFrom-Json | SELECT primarySharedKey).primarySharedKey
           kubectl create secret generic loganalytics -n monitoring --from-literal=WorkSpaceID=$la_id --from-literal=WorkspaceKey=$la_key
-          kubectl apply -f .\az-aks\k8s-yml-templates\fluentbitAzLogAnalytics\. -n monitoring
+          kubectl apply -f ./az-aks/k8s-yml-templates/fluentbitAzLogAnalytics/. -n monitoring
         }
       }
 }
@@ -1026,22 +1045,22 @@ Function SetupK8SMetricsMonitoring($K8SMetricsMonitoringType, $K8SLogMonitoringT
          #DONT use double quotes in PS 
          helm upgrade --install grafana grafana/grafana --set persistence.enabled=true  `
          -f ./az-aks/k8s-yml-templates/prometheus-grafana/grafana-values/$FolderName/values.yml  `
-         --set grafana\.ini.auth\.azuread.client_id="$ENV:GRAFANA_CLIENT_ID"   `
+         --set grafana/.ini.auth/.azuread.client_id="$ENV:GRAFANA_CLIENT_ID"   `
          --set adminPassword="$env:GRAFANA_ADMIN_PASSWORD" `
-         --set grafana\.ini.server.root_url="$GRAFANA_URL" `
-         --set grafana\.ini.auth\.azuread.auth_url="https://login.microsoftonline.com/$env:ARM_TENANT_ID/oauth2/v2.0/authorize"   `
-          --set grafana\.ini.auth\.azuread.token_url="https://login.microsoftonline.com/$env:ARM_TENANT_ID/oauth2/v2.0/token"   `
-         --set grafana\.ini.auth\.azuread.client_secret="$ENV:GRAFANA_CLIENT_SECRET" -n monitoring   #persistent is disabled by default.
+         --set grafana/.ini.server.root_url="$GRAFANA_URL" `
+         --set grafana/.ini.auth/.azuread.auth_url="https://login.microsoftonline.com/$env:ARM_TENANT_ID/oauth2/v2.0/authorize"   `
+          --set grafana/.ini.auth/.azuread.token_url="https://login.microsoftonline.com/$env:ARM_TENANT_ID/oauth2/v2.0/token"   `
+         --set grafana/.ini.auth/.azuread.client_secret="$ENV:GRAFANA_CLIENT_SECRET" -n monitoring   #persistent is disabled by default.
               kubectl apply -f ./az-aks/k8s-yml-templates/prometheus-grafana/.  # to setup ingress 
           #----TSONLY----#remove-item $pwd/az-aks/k8s-yml-templates/prometheus-grafana/prom-values/$FolderName/object-store.yml -force    
           helm upgrade --install prometheus-adapter prometheus-community/prometheus-adapter `
-          -f .\az-aks\k8s-yml-templates\prometheus-grafana\prom-values\$FolderName\prom-adapter-values.yml -n monitoring
+          -f ./az-aks/k8s-yml-templates/prometheus-grafana/prom-values/$FolderName/prom-adapter-values.yml -n monitoring
 
           helm upgrade --install loki --namespace=monitoring grafana/loki-stack --set grafana.enabled=false `
             --set prometheus.enabled=false `
             --set loki.persistence.enabled=true `
             --set loki.persistence.storageClassName="default" `
-            --set loki.persistence.size=5Gi -n monitoring -f .\az-aks\k8s-yml-templates\prometheus-grafana\loki-values\loki-config.yml
+            --set loki.persistence.size=5Gi -n monitoring -f ./az-aks/k8s-yml-templates/prometheus-grafana/loki-values/loki-config.yml
             #Loki + Promtail
         }
         "HAPrometheus-Thanos"
@@ -1067,22 +1086,22 @@ Function SetupK8SMetricsMonitoring($K8SMetricsMonitoringType, $K8SLogMonitoringT
          
           helm upgrade --install grafana grafana/grafana --set persistence.enabled=true  `
           -f ./az-aks/k8s-yml-templates/prometheus-grafana/grafana-values/$FolderName/values.yml  `
-          --set grafana\.ini.auth\.azuread.client_id="$ENV:GRAFANA_CLIENT_ID"   `
+          --set grafana/.ini.auth/.azuread.client_id="$ENV:GRAFANA_CLIENT_ID"   `
           --set adminPassword="$env:GRAFANA_ADMIN_PASSWORD" `
-          --set grafana\.ini.server.root_url="$env:GRAFANA_INI_URL" `
-          --set grafana\.ini.auth\.azuread.auth_url="https://login.microsoftonline.com/$env:ARM_TENANT_ID/oauth2/v2.0/authorize"   `
-          --set grafana\.ini.auth\.azuread.token_url="https://login.microsoftonline.com/$env:ARM_TENANT_ID/oauth2/v2.0/token"   `
-          --set grafana\.ini.auth\.azuread.client_secret="$ENV:GRAFANA_CLIENT_SECRET" -n monitoring  #persistent is disabled by default.
+          --set grafana/.ini.server.root_url="$env:GRAFANA_INI_URL" `
+          --set grafana/.ini.auth/.azuread.auth_url="https://login.microsoftonline.com/$env:ARM_TENANT_ID/oauth2/v2.0/authorize"   `
+          --set grafana/.ini.auth/.azuread.token_url="https://login.microsoftonline.com/$env:ARM_TENANT_ID/oauth2/v2.0/token"   `
+          --set grafana/.ini.auth/.azuread.client_secret="$ENV:GRAFANA_CLIENT_SECRET" -n monitoring  #persistent is disabled by default.
           kubectl apply -f ./az-aks/k8s-yml-templates/prometheus-grafana/.  # to setup ingress   
           remove-item $pwd/az-aks/k8s-yml-templates/prometheus-grafana/prom-values/$FolderName/object-store.yml -force      
           helm upgrade --install prometheus-adapter prometheus-community/prometheus-adapter `
-          -f .\az-aks\k8s-yml-templates\prometheus-grafana\prom-values\$FolderName\prom-adapter-values.yml -n monitoring
+          -f ./az-aks/k8s-yml-templates/prometheus-grafana/prom-values/$FolderName/prom-adapter-values.yml -n monitoring
 #if the cluster is too big and you want to send metrics of only certain apps based on labels - podMonitorSelector, serviceMonitorSelector
           helm upgrade --install loki --namespace=monitoring grafana/loki-stack --set grafana.enabled=false `
           --set prometheus.enabled=false `
           --set loki.persistence.enabled=true `
           --set loki.persistence.storageClassName="default" `
-          --set loki.persistence.size=5Gi -n monitoring -f .\az-aks\k8s-yml-templates\prometheus-grafana\loki-values\loki-config.yml
+          --set loki.persistence.size=5Gi -n monitoring -f ./az-aks/k8s-yml-templates/prometheus-grafana/loki-values/loki-config.yml
           #Loki + Promtail
         }
         "None"
@@ -1104,7 +1123,7 @@ Function InstallSonarQube()
    #helm upgrade --install sonarqube stable/sonarqube --set persistence.storageClass="managed-ssd-retain"  --set persistence.enabled=true --set image.tag="7.9.2-community" -n devops-addons
    #After running the below, you will the logs stopping with Database needs to be upgrade.
    #Use https://dev-sonarqube.cloudkube.xyz/setup and finish the upgrade -- https://stackoverflow.com/questions/50694564/sonarqube-7-1-with-external-mysql-database-fails-with-database-must-be-upgraded
-   #helm upgrade --install -f .\helm\sonarqube\values.yml sonarqube stable/sonarqube --set persistence.enabled=true --set image.tag="8.5.1-community" `
+   #helm upgrade --install -f ./helm/sonarqube/values.yml sonarqube stable/sonarqube --set persistence.enabled=true --set image.tag="8.5.1-community" `
    #--set postgresql.enabled=false --set postgresql.postgresqlServer='sonar-db01.postgres.database.azure.com'  `
    # --set postgresql.postgresqlUsername='sonaradmin@sonar-db01' `
    # --set postgresql.postgresqlPassword=$env:postgres_db_pwd --set postgresql.postgresqlDatabase='postgres'  -n devops-addons 
@@ -1226,17 +1245,17 @@ Function DeploySampleVotingApp($k8sEnvironment)
   if($k8sEnvironment -eq "DEV")
   {
     $Acr_name = (Get-AzContainerRegistry -ResourceGroupName $env:DEV_K8S_RG_NAME | Select Name).Name
-    kubectl apply -f .\az-aks\k8s-yml-templates\voting-app-prereq\NONPROD\secret.yml -n dev
+    kubectl apply -f ./az-aks/k8s-yml-templates/voting-app-prereq/NONPROD/secret.yml -n dev
   }
   else
   {
     $Acr_name = (Get-AzContainerRegistry -ResourceGroupName $env:PRD_A_K8S_RG_NAME | Select Name).Name
-    kubectl apply -f az-aks\k8s-yml-templates\voting-app-prereq\PROD\secret.yml -n prod
+    kubectl apply -f az-aks/k8s-yml-templates/voting-app-prereq/PROD/secret.yml -n prod
   }
   
-  helm upgrade --install v2-app .\sample-voting-app\charts\v2-app\. -n dev --set buildID=100
-  helm upgrade --install v2-analytics .\sample-voting-app\charts\v2-analytics\. -n dev --set buildID=100
-  helm upgrade --install v2-storage .\sample-voting-app\charts\v2-storage\. -n dev --set buildID=100 
+  helm upgrade --install v2-app ./sample-voting-app/charts/v2-app/. -n dev --set buildID=100
+  helm upgrade --install v2-analytics ./sample-voting-app/charts/v2-analytics/. -n dev --set buildID=100
+  helm upgrade --install v2-storage ./sample-voting-app/charts/v2-storage/. -n dev --set buildID=100 
 }
 Function ApplyK8SAddonResourceTemplates($FolderName, $IngressController, $serviceMeshType, $requireDefectDojo, $k8sEnvironment, $K8SLogMonitoringType, 
 $cloudProvider, $DEFAULT_PRD_URL_SUFFIX, $K8S_RG_NAME, $LA_NAME)
@@ -1270,6 +1289,7 @@ $cloudProvider, $DEFAULT_PRD_URL_SUFFIX, $K8S_RG_NAME, $LA_NAME)
     kubectl apply -f ./az-aks/k8s-yml-templates/voting-app-prereq/$FolderName/.
     #Apply Kube-Bench templates
     kubectl apply -f devsecops/k8s-templates/kube-bench.yml
+    kubectl apply -f devsecops/k8s-templates/kube-hunter.yml
     kubectl apply -f ./az-aks/k8s-yml-templates/core/ingress/$FolderName/.       
 }
 
@@ -1283,10 +1303,10 @@ else {
 
 if($dryRunforGithubActions -eq "false")
 {
-  if($applyTFTemplates -eq "true" -and  $k8sEnvironment -eq "DEV")
+  if($k8sEnvironment -eq "DEV")
   { 
     
-    BuildK8STFInfra $K8SMonitoringType $k8sEnvironment $IngressController $enable_azure_policy
+    BuildK8STFInfra $K8SLogMonitoringType $k8sEnvironment $IngressController $enable_azure_policy $applyTFTemplates
     LogintoK8S $ENV:ARM_SUBSCRIPTION_ID $ENV:DEV_K8S_NAME $ENV:ARM_CLIENT_ID $ENV:ARM_CLIENT_SECRET $ENV:DEV_K8S_RG_NAME
     ApplyK8SCoreTemplates $k8sEnvironment $Policies
     $FolderName="NONPROD"
@@ -1296,7 +1316,7 @@ if($dryRunforGithubActions -eq "false")
     
   }elseif($productionClusterConfigType -EQ "PrimaryRegionOnly")
   {
-    BuildK8STFInfra $K8SMonitoringType "PRD-A" $IngressController $enable_azure_policy
+    BuildK8STFInfra $K8SLogMonitoringType "PRD-A" $IngressController $enable_azure_policy $applyTFTemplates
     LogintoK8S $ENV:ARM_SUBSCRIPTION_ID $ENV:PRD_A_K8S_NAME $ENV:ARM_CLIENT_ID $ENV:ARM_CLIENT_SECRET $ENV:PRD_A_K8S_RG_NAME
     ApplyK8SCoreTemplates "PRD-A" $Policies
     $FolderName="PRD-A"
@@ -1307,7 +1327,7 @@ if($dryRunforGithubActions -eq "false")
   }ELSE
   {
     #deploy in primary region
-    BuildK8STFInfra $K8SMonitoringType "PRD-A" $IngressController $enable_azure_policy
+    BuildK8STFInfra $K8SLogMonitoringType "PRD-A" $IngressController $enable_azure_policy $applyTFTemplates
     LogintoK8S $ENV:ARM_SUBSCRIPTION_ID $ENV:PRD_A_K8S_NAME $ENV:ARM_CLIENT_ID $ENV:ARM_CLIENT_SECRET $ENV:PRD_A_K8S_RG_NAME
     ApplyK8SCoreTemplates "PRD-A" $Policies
     
@@ -1316,7 +1336,7 @@ if($dryRunforGithubActions -eq "false")
     $DEFAULT_PRD_URL_SUFFIX $ENV:PRD_A_K8S_RG_NAME $env:PRD_A_LA_NAME
     
     #deploy on secondary region
-    BuildK8STFInfra $K8SMonitoringType "PRD-B" $IngressController $enable_azure_policy
+    BuildK8STFInfra $K8SLogMonitoringType "PRD-B" $IngressController $enable_azure_policy $applyTFTemplates
     LogintoK8S $ENV:ARM_SUBSCRIPTION_ID $ENV:PRD_B_K8S_NAME $ENV:ARM_CLIENT_ID $ENV:ARM_CLIENT_SECRET $ENV:PRD_B_K8S_RG_NAME
     ApplyK8SCoreTemplates "PRD-B" $Policies
 
