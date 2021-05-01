@@ -14,3 +14,4 @@ spec:
   parameters:
     repos:
       - "aksacrdev01.azurecr.io"
+      - "g0pinath/k8s-secops-reports"
