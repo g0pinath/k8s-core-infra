@@ -1253,9 +1253,9 @@ Function DeploySampleVotingApp($k8sEnvironment)
     kubectl apply -f az-aks/k8s-yml-templates/voting-app-prereq/PROD/secret.yml -n prod
   }
   
-  helm upgrade --install v2-app ./sample-voting-app/charts/v2-app/. -n dev --set buildID=100
-  helm upgrade --install v2-analytics ./sample-voting-app/charts/v2-analytics/. -n dev --set buildID=100
-  helm upgrade --install v2-storage ./sample-voting-app/charts/v2-storage/. -n dev --set buildID=100 
+  helm upgrade --install v2-app ./sample-voting-app/charts/v2-app/. -n dev --set buildID=latest
+  helm upgrade --install v2-analytics ./sample-voting-app/charts/v2-analytics/. -n dev --set buildID=latest
+  helm upgrade --install v2-storage ./sample-voting-app/charts/v2-storage/. -n dev --set buildID=latest
 }
 Function ApplyK8SAddonResourceTemplates($FolderName, $IngressController, $serviceMeshType, $requireDefectDojo, $k8sEnvironment, $K8SLogMonitoringType, 
 $cloudProvider, $DEFAULT_PRD_URL_SUFFIX, $K8S_RG_NAME, $LA_NAME)

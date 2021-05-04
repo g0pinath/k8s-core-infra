@@ -24,7 +24,7 @@ ingress:
     
 image:
   useImagePullSecrets: false
-  repository: aksacrdev01.azurecr.io/
+  repository: g0pinath/
   pullPolicy: Always
 #nodePoolName: smallpool 
 nodePoolName: apppool01
@@ -33,5 +33,5 @@ hpa:
   dev:
     cpuAvgUtilization: 50
     memory_rss: 262144000
-    minReplicas: 2
-    maxReplicas: 4 # if you manually scale to a value more than this. HPA will scale it back automatically.
+    minReplicas: 50
+    maxReplicas: 400 # if you manually scale to a value more than this. HPA will scale it back automatically.

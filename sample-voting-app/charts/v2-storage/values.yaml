@@ -25,7 +25,7 @@ ingress:
     #pilotURL: voting-app-v2.az.k8s
 image:
   useImagePullSecrets: false
-  repository: aksacrdev01.azurecr.io/
+  repository: g0pinath/
   pullPolicy: Always
 
 #nodePoolName: smallpool
