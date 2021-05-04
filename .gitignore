@@ -1,6 +1,7 @@
 # Local .terraform directories
 backup/**
 **/.terraform/**/**
+az-aks/k8s-infra/tf/**/.terraform
 **/.terraform/**/**/**
 **/.terraform/**/**/**/**
 **/az-aks/archive/**
