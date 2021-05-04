@@ -575,7 +575,7 @@ Function BuildK8STFInfra($K8SLogMonitoringType, $k8sEnvironment, $IngressControl
       $env:K8S_RG_NAME=$env:DEV_K8S_RG_NAME  
           if($K8SLogMonitoringType -eq "OMS")
           {
-            Write-Output "Entering OMS"
+            Write-Output "Entering OMS -- enable_azure_policy  $enable_azure_policy"
             terragrunt init
             terragrunt plan  --var OMSLogging=true `
                         --var client_id=$env:ARM_CLIENT_ID --var client_secret=$env:ARM_CLIENT_SECRET `
@@ -1293,7 +1293,7 @@ $cloudProvider, $DEFAULT_PRD_URL_SUFFIX, $K8S_RG_NAME, $LA_NAME)
     kubectl apply -f ./az-aks/k8s-yml-templates/core/ingress/$FolderName/.       
 }
 
-if($Policies -eq "AzPolicies")
+if($Policies -eq "AzPolicy")
     {
       $enable_azure_policy="true"
     }
