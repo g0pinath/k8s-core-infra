@@ -938,10 +938,11 @@ Function SetupK8SLogging($K8SLogMonitoringType, $cloudProvider, $K8S_RG_NAME)
         "EFKinCluster"
         {
               # kubectl apply -f ./k8s-yml-templates/efk-logging/. # dont apply all at once, wait for ES to be present and then deploy kibana
-            kubectl apply -f ./k8s-yml-templates/efk-logging/$K8SLogMonitoringType/elastic/elastic-statefulset-$cloudProvider.yml
-            kubectl apply -f ./k8s-yml-templates/efk-logging/$K8SLogMonitoringType/elastic/elastic-svc.yml
             
-            kubectl apply -f ./k8s-yml-templates/efk-logging/$K8SLogMonitoringType/fluent/.
+            kubectl apply -f ./az-aks/k8s-yml-templates/efk-logging/$K8SLogMonitoringType/elastic/elastic-statefulset-$cloudProvider.yml
+            kubectl apply -f ./az-aks/k8s-yml-templates/efk-logging/$K8SLogMonitoringType/elastic/elastic-svc.yml
+            
+            kubectl apply -f ./az-aks/k8s-yml-templates/efk-logging/$K8SLogMonitoringType/fluent/.
             $esCount = (kubectl get pods | select-string "es-cluster" | Measure).Count
             $timeWaited=0
             #dont install kibana before ES is up and running.
@@ -952,18 +953,18 @@ Function SetupK8SLogging($K8SLogMonitoringType, $cloudProvider, $K8S_RG_NAME)
               $timeWaited+=1
             }while($esCount -ne 3 -and $timeWaited -lt 300)
             Start-Sleep -s 180 #wait for the 3rd ES cluster pod to be online.
-            kubectl apply -f ./k8s-yml-templates/efk-logging/$K8SLogMonitoringType/kibana/.
+            kubectl apply -f ./az-aks/k8s-yml-templates/efk-logging/$K8SLogMonitoringType/kibana/.
         }
         "ElasticInCloud"
         {
-            kubectl apply -f ./k8s-yml-templates/efk-logging/$K8SLogMonitoringType/fluent/.
+            kubectl apply -f ./az-aks/k8s-yml-templates/efk-logging/$K8SLogMonitoringType/fluent/.
         }
         "FluentBitAzLogAnalytics"
         {
           $la_id = (az monitor log-analytics workspace list -g $K8S_RG_NAME | Convertfrom-Json | select customerid).customerid
           $la_key = (az monitor log-analytics workspace get-shared-keys --resource-group  $K8S_RG_NAME  -n $LA_NAME | ConvertFrom-Json | SELECT primarySharedKey).primarySharedKey
           kubectl create secret generic loganalytics -n monitoring --from-literal=WorkSpaceID=$la_id --from-literal=WorkspaceKey=$la_key
-          kubectl apply -f ./az-aks/k8s-yml-templates/fluentbitAzLogAnalytics/. -n monitoring
+          kubectl apply -f ./az-aks/az-aks/k8s-yml-templates/fluentbitAzLogAnalytics/. -n monitoring
         }
       }
 }

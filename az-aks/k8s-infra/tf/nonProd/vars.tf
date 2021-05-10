@@ -163,7 +163,7 @@ variable "k8s_properties" {
       apppool01_spot_max_price = "-1"
       apppool01_availability_zones =  ["1", "2"]
       apppool01_max_pods = 250
-      apppool01_is_spot = false     
+      apppool01_is_spot = true     
 
       monitoring_pool_name = "monitorpool"
       monitoring_pool_size     = "Standard_A2m_v2"
@@ -174,7 +174,7 @@ variable "k8s_properties" {
       monitoring_pool_spot_max_price = "-1"
       monitoring_pool_availability_zones =  ["1", "2"]
       monitoring_pool_max_pods = 15
-      monitoring_pool_is_spot = false
+      monitoring_pool_is_spot = true
       
 
     }
