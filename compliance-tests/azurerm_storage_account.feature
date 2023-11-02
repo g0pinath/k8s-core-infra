@@ -7,10 +7,10 @@ Feature: Azure Storage Account related security feature
 		Then it must have enable_https_traffic_only
 		And its value must be true
 
-	Scenario: Ensure Azure Storage Account min_tls_version is TLS_2
+	Scenario: Ensure Azure Storage Account min_tls_version is TLS1_2
 		Given I have azurerm_storage_account defined
 		Then it must have min_tls_version
-		And its value must be TLS_2
+		And its value must be TLS1_2
 		
 	Scenario: Ensure Azure Storage Account shared_access_key_enabled is false
 		Given I have azurerm_storage_account defined
