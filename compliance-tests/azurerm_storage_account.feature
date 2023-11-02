@@ -29,3 +29,22 @@ Feature: Azure Storage Account related security feature
 	Scenario: Ensure Azure Storage Account azurerm_storage_account_customer_managed_key is configured
 		Given I have azurerm_storage_account defined
 		Then it must have customer_managed_key
+
+# Policy cant enforce this.
+	Scenario: Ensure Azure Storage Account delete_retention_policy is configured
+		Given I have azurerm_storage_account defined
+		Then it must have delete_retention_policy
+		Then it must have days
+		And its value must be 90
+# Policy cant enforce this.
+	Scenario: Ensure Azure Storage Account restore_policy is configured
+		Given I have azurerm_storage_account defined
+		Then it must have restore_policy
+		Then it must have days
+		And its value must be 90
+# Policy cant enforce this.
+	Scenario: Ensure Azure Storage Account container_delete_retention_policy is configured
+		Given I have azurerm_storage_account defined
+		Then it must have container_delete_retention_policy
+		Then it must have days
+		And its value must be 90				
