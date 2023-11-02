@@ -28,4 +28,4 @@ Feature: Azure Storage Account related security feature
 # Policy cant enforce this.
 	Scenario: Ensure Azure Storage Account azurerm_storage_account_customer_managed_key is configured
 		Given I have azurerm_storage_account defined
-		Then it must have azurerm_storage_account_customer_managed_key defined
+		Then it must have customer_managed_key
